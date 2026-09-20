@@ -1,0 +1,28 @@
+package com.Projects.SmartRailApplication.train.Entities;
+
+import com.Projects.SmartRailApplication.train.Entities.enums.TrainStatus;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity 
+@Table (name = "trains")
+public class train {
+    @Id 
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column (unique = true)
+    private String trainNumber;
+    
+    private String name;
+
+    @Enumerated (EnumType.STRING)
+    private TrainStatus status;
+}
