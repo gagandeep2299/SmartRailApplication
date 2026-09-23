@@ -1,4 +1,4 @@
-package com.Projects.SmartRailApplication.train;
+package com.Projects.SmartRailApplication.train.Service;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -7,5 +7,5 @@ import com.Projects.SmartRailApplication.train.Entities.Station;
 
 @Repository 
 public interface stationRepository extends JpaRepository<Station, Long> {
-    
+    Station save(Station station);
 }
