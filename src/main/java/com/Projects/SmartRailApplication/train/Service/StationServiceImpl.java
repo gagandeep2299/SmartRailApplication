@@ -52,4 +52,24 @@ public class StationServiceImpl implements StationService {
             return new StationResponse(station.getName(), station.getState(), station.getCity(), station.getCode());
         
     }
+    @Override
+    public StationResponse getStationByCode(String code) {
+        Station station = stationRepository.findByCode(code);
+        if(station == null) {
+            throw new EntityNotFoundException("Station not found with code: " + code);
+        }
+            return new StationResponse(station.getName(), station.getState(), station.getCity(), station.getCode());
+    }
+
+    @Override 
+    public List<StationResponse> searchStations(String query) {
+        List<Station> stations = stationRepository.findByNameContainingIgnoreCase(query);
+        return stations.stream()
+                .filter(station -> station.getName().toLowerCase().contains(query.toLowerCase()) ||
+                                   station.getState().toLowerCase().contains(query.toLowerCase()) ||
+                                   station.getCity().toLowerCase().contains(query.toLowerCase()) ||
+                                   station.getCode().toLowerCase().contains(query.toLowerCase()))
+                .map(station -> new StationResponse(station.getName(),station.getState(), station.getCity(),station.getCode()))
+                .toList();
+    }
 }

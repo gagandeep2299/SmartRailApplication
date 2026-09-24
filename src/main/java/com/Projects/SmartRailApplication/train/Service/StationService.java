@@ -12,4 +12,6 @@ public interface StationService {
     public boolean addStation(StationRequest station);
     public List<StationResponse> getAllStations();
     public StationResponse getStationById(Long id);
+    public StationResponse getStationByCode(String code);
+    public List<StationResponse> searchStations(String query);
 }

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.Projects.SmartRailApplication.train.Service.StationService;
@@ -46,5 +47,25 @@ public class StationController {
             return ResponseEntity.status(404).body("Station not found with id: " + id);
         }
         return ResponseEntity.ok(station);
+    }
+    @GetMapping ("/code/{code}")
+    public ResponseEntity<?> getStationByCode(@PathVariable String code) {
+        StationResponse station;
+        try{
+            station = stationService.getStationByCode(code); 
+            } catch (Exception e) {
+                return ResponseEntity.status(404).body("Station not found with code: " + code);
+            }
+        return ResponseEntity.ok(station);
+    }
+    @GetMapping ("/search?query=")
+    public ResponseEntity<?> searchStations(@RequestParam String query) {
+        List<StationResponse> stations;
+        try{
+            stations = stationService.searchStations(query);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error searching stations: " + e.getMessage());
+        }
+        return ResponseEntity.ok(stations);
     }
 }
