@@ -16,4 +16,5 @@ public class StationResponse {
     private String state;
     private String city;
     private String code;
+    private boolean isActive;
 }

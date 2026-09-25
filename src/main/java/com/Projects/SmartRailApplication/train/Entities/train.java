@@ -31,4 +31,5 @@ public class train {
 
     @Enumerated (EnumType.STRING)
     private TrainStatus status;
+
 }

@@ -14,4 +14,5 @@ public interface StationService {
     public StationResponse getStationById(Long id);
     public StationResponse getStationByCode(String code);
     public List<StationResponse> searchStations(String query);
+    public StationResponse updateStation(Long id, StationRequest station); 
 }

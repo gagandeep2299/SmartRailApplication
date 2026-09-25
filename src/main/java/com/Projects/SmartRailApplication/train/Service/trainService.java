@@ -1,12 +1,18 @@
 package com.Projects.SmartRailApplication.train.Service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
+import com.Projects.SmartRailApplication.train.dto.TrainRequest;
+import com.Projects.SmartRailApplication.train.dto.TrainResponse;
 
-import com.Projects.SmartRailApplication.train.Repository.trainRepository;
-
-@Service 
-public class trainService {
-    @Autowired 
-    private trainRepository trainRepository;
+@Service
+public interface TrainService {
+    void addTrain(TrainRequest trainRequest);
+    List<TrainResponse> getAllTrains();
+    TrainResponse getTrainById(Long trainId);
+    TrainResponse getTrainByNumber(String trainNumber);
+    List<TrainResponse> getTrainsByName(String name);
+    void updateTrain(Long trainId, TrainRequest trainRequest);
+    void updateTrainStatus(Long trainId, String status);
 }

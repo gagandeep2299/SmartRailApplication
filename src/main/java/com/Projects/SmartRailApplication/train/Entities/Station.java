@@ -28,4 +28,6 @@ public class Station {
     private String state;
 
     private String city;
+
+    private boolean isActive;
 }

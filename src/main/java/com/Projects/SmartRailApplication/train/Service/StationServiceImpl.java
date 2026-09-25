@@ -40,7 +40,7 @@ public class StationServiceImpl implements StationService {
     public List<StationResponse> getAllStations() {
         List<Station> stations = stationRepository.findAll();
         return stations.stream()
-                .map(station -> new StationResponse(station.getName(),station.getState(), station.getCity(),station.getCode()))
+                .map(station -> new StationResponse(station.getName(),station.getState(), station.getCity(),station.getCode(),station.isActive()))
                 .toList();
     }    
     @Override 
@@ -49,7 +49,7 @@ public class StationServiceImpl implements StationService {
         if(station == null) {
             throw new EntityNotFoundException("Station not found with id: " + id);
         }
-            return new StationResponse(station.getName(), station.getState(), station.getCity(), station.getCode());
+            return new StationResponse(station.getName(), station.getState(), station.getCity(), station.getCode(), station.isActive());
         
     }
     @Override
@@ -58,7 +58,7 @@ public class StationServiceImpl implements StationService {
         if(station == null) {
             throw new EntityNotFoundException("Station not found with code: " + code);
         }
-            return new StationResponse(station.getName(), station.getState(), station.getCity(), station.getCode());
+            return new StationResponse(station.getName(), station.getState(), station.getCity(), station.getCode(), station.isActive());
     }
 
     @Override 
@@ -69,7 +69,22 @@ public class StationServiceImpl implements StationService {
                                    station.getState().toLowerCase().contains(query.toLowerCase()) ||
                                    station.getCity().toLowerCase().contains(query.toLowerCase()) ||
                                    station.getCode().toLowerCase().contains(query.toLowerCase()))
-                .map(station -> new StationResponse(station.getName(),station.getState(), station.getCity(),station.getCode()))
+                .map(station -> new StationResponse(station.getName(),station.getState(), station.getCity(),station.getCode(),station.isActive()))
                 .toList();
     }
+    @Override 
+    public StationResponse updateStation(Long id, StationRequest station){
+        Station existingStation = stationRepository.findById(id).orElse(null);
+            if(existingStation == null) {
+                throw new EntityNotFoundException("Station not found with id: " + id);
+            }
+            existingStation.setName(station.getName());
+            existingStation.setState(station.getState());
+            existingStation.setCity(station.getCity());
+            existingStation.setCode(station.getCode());
+            existingStation.setActive(station.isActive());
+            stationRepository.save(existingStation);
+            return new StationResponse(existingStation.getName(), existingStation.getState(), existingStation.getCity(), existingStation.getCode(), existingStation.isActive());
+
+        }
 }
