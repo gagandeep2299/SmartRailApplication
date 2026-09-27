@@ -1,10 +1,10 @@
 package com.Projects.SmartRailApplication.train.dto;
 
-import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@Builder 
+@NoArgsConstructor  
 public class StationRequest {
     private String name;
     private String state;

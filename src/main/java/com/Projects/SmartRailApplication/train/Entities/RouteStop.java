@@ -10,8 +10,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity 
+@Getter 
+@Setter 
 @Table (name ="route_stop")
 public class RouteStop {
 
@@ -22,14 +26,17 @@ public class RouteStop {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn (name = "train_id")
-    private train trainId;
+    private train train;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn (name = "station_id")
-    private Station stationId;
+    private Station station;
+
+    private Long stopSequence;
 
     private LocalTime arrivalTime;
 
     private LocalTime departureTime;
+
     
 }

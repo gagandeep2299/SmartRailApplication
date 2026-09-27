@@ -12,4 +12,6 @@ public interface stationRepository extends JpaRepository<Station, Long> {
     Station save(Station station);
     Station findByCode(String code);
     List<Station> findByNameContainingIgnoreCase(String query);
+    List<Station> findByNameContainingIgnoreCaseOrStateContainingIgnoreCaseOrCityContainingIgnoreCaseOrCodeContainingIgnoreCase(
+            String name, String state, String city, String code);
 }

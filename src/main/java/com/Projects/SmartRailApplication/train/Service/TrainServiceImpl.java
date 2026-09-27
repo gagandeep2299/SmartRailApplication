@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.Projects.SmartRailApplication.train.Entities.train;
 import com.Projects.SmartRailApplication.train.Entities.enums.TrainStatus;
@@ -14,7 +15,8 @@ import jakarta.persistence.EntityNotFoundException;
 
 import com.Projects.SmartRailApplication.train.Repository.trainRepository;
 
-public class TrainServiceImpl implements TrainService {
+@Service
+public class TrainServiceImpl implements trainService {
 
     @Autowired
     private  trainRepository trainRepository;
@@ -35,14 +37,14 @@ public class TrainServiceImpl implements TrainService {
     public List<TrainResponse> getAllTrains() {
         List<train> trains = trainRepository.findAll();
         return trains.stream()
-                .map(train -> new TrainResponse(train.getId(), train.getName(), train.getTrainNumber(), train.getStatus()))
+                .map(train -> new TrainResponse(train.getId(), train.getTrainNumber(), train.getName(), train.getStatus()))
                 .toList();
     }
     @Override
     public TrainResponse getTrainById(Long trainId) {
         train train = trainRepository.findById(trainId)
                 .orElseThrow(() -> new EntityNotFoundException("Train not found with ID: " + trainId));
-        return new TrainResponse(train.getId(), train.getName(), train.getTrainNumber(), train.getStatus());
+        return new TrainResponse(train.getId(), train.getTrainNumber(), train.getName(), train.getStatus());
     }
     @Override
     public TrainResponse getTrainByNumber(String trainNumber) {
@@ -50,7 +52,7 @@ public class TrainServiceImpl implements TrainService {
         if (train.isEmpty()) {
             throw new EntityNotFoundException("Train not found with number: " + trainNumber);
         }
-        return new TrainResponse(train.get().getId(), train.get().getName(), train.get().getTrainNumber(), train.get().getStatus());
+        return new TrainResponse(train.get().getId(), train.get().getTrainNumber(), train.get().getName(), train.get().getStatus());
     }
     @Override
     public List<TrainResponse> getTrainsByName(String name) {

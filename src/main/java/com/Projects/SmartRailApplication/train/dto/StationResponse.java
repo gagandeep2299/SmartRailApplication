@@ -12,6 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor 
 @Builder 
 public class StationResponse {
+    private Long id;
     private String name;
     private String state;
     private String city;

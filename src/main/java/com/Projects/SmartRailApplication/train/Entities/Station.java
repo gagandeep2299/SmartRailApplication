@@ -2,6 +2,7 @@ package com.Projects.SmartRailApplication.train.Entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,5 +30,6 @@ public class Station {
 
     private String city;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean isActive;
 }

@@ -17,6 +17,11 @@ public class RouteStopResponse {
     private Long id;
     private Long trainId;
     private Long stationId;
+    private String stationCode;
+    private String stationName;
+    private String stationCity;
+    private String stationState;
+    private Long stopSequence;
     private LocalTime arrivalTime;
     private LocalTime departureTime;
 }

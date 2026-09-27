@@ -2,8 +2,6 @@ package com.Projects.SmartRailApplication.train.Controller;
 
 import java.util.List;
 
-import javax.xml.crypto.dsig.TransformService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.Projects.SmartRailApplication.train.Service.TrainService;
+import com.Projects.SmartRailApplication.train.Service.trainService;
 import com.Projects.SmartRailApplication.train.dto.TrainRequest;
 import com.Projects.SmartRailApplication.train.dto.TrainResponse;
 
@@ -27,11 +25,12 @@ import jakarta.persistence.EntityNotFoundException;
 public class trainController {
 
     @Autowired
-    private TrainService trainService;
+    private trainService trainService;
 
     @PostMapping()
     public ResponseEntity<?> addTrain(@RequestBody TrainRequest trainRequest) {
         try{
+            System.out.println(trainRequest.getTrainNumber()+" "+trainRequest.getName()+" "+trainRequest.getStatus());
             trainService.addTrain(trainRequest);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Train already exist with this number");
@@ -50,28 +49,30 @@ public class trainController {
 
     @GetMapping ("/{trainId}")
     public ResponseEntity<?> getTrain(@PathVariable Long trainId) {
+        TrainResponse trainResponse;
         try{
-            trainService.getTrainById(trainId);
+            trainResponse = trainService.getTrainById(trainId);
         } catch(EntityNotFoundException e) {
             return ResponseEntity.status(404).body("Train not found with ID: " + trainId);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("An error occurred while retrieving the train");
         }
-        return ResponseEntity.ok("Getting train with ID: " + trainId);
+        return ResponseEntity.ok(trainResponse);
     }
 
     @GetMapping ("/number/{trainNumber}")
     public ResponseEntity<?> getTrainByNumber(@PathVariable String trainNumber) {
+        TrainResponse trainResponse;
         try{
-            trainService.getTrainByNumber(trainNumber);
+            trainResponse = trainService.getTrainByNumber(trainNumber);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(404).body("Train not found with number: " + trainNumber);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("An error occurred while retrieving the train");
         }
-        return ResponseEntity.ok("Getting train with number: " + trainNumber);
+        return ResponseEntity.ok(trainResponse);
     }
-    @GetMapping("/search?name=")
+    @GetMapping(value = "/search", params = "name")
     public ResponseEntity<?> searchTrainsByName(@RequestParam String name) {
         List<TrainResponse> trains;
         try{
@@ -95,7 +96,7 @@ public class trainController {
         }
         return ResponseEntity.ok("Updating train with ID: " + trainId);
     }
-    @PatchMapping("/{trainId}/status=")
+    @PatchMapping("/{trainId}/status")
     public ResponseEntity<?> updateTrainStatus(@PathVariable Long trainId, @RequestParam String status) {
         try{
             trainService.updateTrainStatus(trainId, status);
@@ -107,12 +108,6 @@ public class trainController {
             return ResponseEntity.status(500).body("An error occurred while updating the train status");
         }
         return ResponseEntity.ok("Updating train status with ID: " + trainId);
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<?> searchTrains(@RequestParam String from, @RequestParam String to, @RequestParam String date) {
-        // Implementation for searching trains
-        return ResponseEntity.ok("Searching trains from " + from + " to " + to + " on " + date);
     }
 
     @GetMapping ("/{trainId}/seats")

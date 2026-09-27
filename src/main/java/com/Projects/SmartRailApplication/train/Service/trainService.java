@@ -2,12 +2,10 @@ package com.Projects.SmartRailApplication.train.Service;
 
 import java.util.List;
 
-import org.springframework.stereotype.Service;
 import com.Projects.SmartRailApplication.train.dto.TrainRequest;
 import com.Projects.SmartRailApplication.train.dto.TrainResponse;
 
-@Service
-public interface TrainService {
+public interface trainService {
     void addTrain(TrainRequest trainRequest);
     List<TrainResponse> getAllTrains();
     TrainResponse getTrainById(Long trainId);

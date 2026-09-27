@@ -27,6 +27,7 @@ public class StationServiceImpl implements StationService {
             newStation.setState(station.getState());
             newStation.setCity(station.getCity());
             newStation.setCode(station.getCode());
+            newStation.setActive(station.isActive());
             stationRepository.save(newStation);
         } catch (Exception e) {
             // Handle the exception, e.g., log it or rethrow it
@@ -40,7 +41,7 @@ public class StationServiceImpl implements StationService {
     public List<StationResponse> getAllStations() {
         List<Station> stations = stationRepository.findAll();
         return stations.stream()
-                .map(station -> new StationResponse(station.getName(),station.getState(), station.getCity(),station.getCode(),station.isActive()))
+            .map(station -> new StationResponse(station.getId(), station.getName(), station.getState(), station.getCity(), station.getCode(), station.isActive()))
                 .toList();
     }    
     @Override 
@@ -49,7 +50,7 @@ public class StationServiceImpl implements StationService {
         if(station == null) {
             throw new EntityNotFoundException("Station not found with id: " + id);
         }
-            return new StationResponse(station.getName(), station.getState(), station.getCity(), station.getCode(), station.isActive());
+            return new StationResponse(station.getId(), station.getName(), station.getState(), station.getCity(), station.getCode(), station.isActive());
         
     }
     @Override
@@ -58,18 +59,16 @@ public class StationServiceImpl implements StationService {
         if(station == null) {
             throw new EntityNotFoundException("Station not found with code: " + code);
         }
-            return new StationResponse(station.getName(), station.getState(), station.getCity(), station.getCode(), station.isActive());
+            return new StationResponse(station.getId(), station.getName(), station.getState(), station.getCity(), station.getCode(), station.isActive());
     }
 
     @Override 
     public List<StationResponse> searchStations(String query) {
-        List<Station> stations = stationRepository.findByNameContainingIgnoreCase(query);
+        List<Station> stations = stationRepository
+            .findByNameContainingIgnoreCaseOrStateContainingIgnoreCaseOrCityContainingIgnoreCaseOrCodeContainingIgnoreCase(
+                query, query, query, query);
         return stations.stream()
-                .filter(station -> station.getName().toLowerCase().contains(query.toLowerCase()) ||
-                                   station.getState().toLowerCase().contains(query.toLowerCase()) ||
-                                   station.getCity().toLowerCase().contains(query.toLowerCase()) ||
-                                   station.getCode().toLowerCase().contains(query.toLowerCase()))
-                .map(station -> new StationResponse(station.getName(),station.getState(), station.getCity(),station.getCode(),station.isActive()))
+                .map(station -> new StationResponse(station.getId(), station.getName(), station.getState(), station.getCity(), station.getCode(), station.isActive()))
                 .toList();
     }
     @Override 
@@ -84,7 +83,18 @@ public class StationServiceImpl implements StationService {
             existingStation.setCode(station.getCode());
             existingStation.setActive(station.isActive());
             stationRepository.save(existingStation);
-            return new StationResponse(existingStation.getName(), existingStation.getState(), existingStation.getCity(), existingStation.getCode(), existingStation.isActive());
+            return new StationResponse(existingStation.getId(), existingStation.getName(), existingStation.getState(), existingStation.getCity(), existingStation.getCode(), existingStation.isActive());
+
+        }
+        @Override 
+    public StationResponse updateStationStatus(Long id, boolean isActive){
+        Station existingStation = stationRepository.findById(id).orElse(null);
+            if(existingStation == null) {
+                throw new EntityNotFoundException("Station not found with id: " + id);
+            }
+            existingStation.setActive(isActive);
+            stationRepository.save(existingStation);
+            return new StationResponse(existingStation.getId(), existingStation.getName(), existingStation.getState(), existingStation.getCity(), existingStation.getCode(), existingStation.isActive());
 
         }
 }

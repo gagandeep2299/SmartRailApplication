@@ -18,6 +18,7 @@ import com.Projects.SmartRailApplication.train.Service.StationService;
 import com.Projects.SmartRailApplication.train.dto.StationRequest;
 import com.Projects.SmartRailApplication.train.dto.StationResponse;
 
+import jakarta.persistence.EntityNotFoundException;
 @RestController
 @RequestMapping("/api/v1/stations")
 public class StationController {
@@ -45,8 +46,10 @@ public class StationController {
         StationResponse station;
         try{
          station = stationService.getStationById(id); 
-        } catch (Exception e) {
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(404).body("Station not found with id: " + id);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("An error occurred while retrieving the station");
         }
         return ResponseEntity.ok(station);
     }
@@ -55,8 +58,10 @@ public class StationController {
         StationResponse station;
         try{
             station = stationService.getStationByCode(code); 
-            } catch (Exception e) {
+            } catch (EntityNotFoundException e) {
                 return ResponseEntity.status(404).body("Station not found with code: " + code);
+            } catch (Exception e) {
+                return ResponseEntity.status(500).body("An error occurred while retrieving the station");
             }
         return ResponseEntity.ok(station);
     }
@@ -75,8 +80,10 @@ public class StationController {
         StationResponse station1;
         try{
             station1 = stationService.updateStation(id, station); 
-        } catch (Exception e) {
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(404).body("Station not found with id: " + id);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("An error occurred while updating the station"+ e.getMessage());
         }
         return ResponseEntity.ok().body(station1);
     }
@@ -84,17 +91,11 @@ public class StationController {
     public ResponseEntity<?> updateStationStatus(@PathVariable Long id, @RequestParam boolean status) {
         StationResponse station;
         try {
-            station = stationService.getStationById(id);
-            station.setActive(status);
-            station = stationService.updateStation(id, StationRequest.builder()
-                    .name(station.getName())
-                    .state(station.getState())
-                    .city(station.getCity())
-                    .code(station.getCode())
-                    .isActive(status)
-                    .build());
-        } catch (Exception e) {
+            station = stationService.updateStationStatus(id, status);
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.status(404).body("Station not found with id: " + id);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("An error occurred while updating station status" + e.getMessage());
         }
         return ResponseEntity.ok().body(station);
     }
