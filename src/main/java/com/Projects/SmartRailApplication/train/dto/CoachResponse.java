@@ -18,4 +18,5 @@ public class CoachResponse {
     private Long trainId;
     private String coachNumber;
     private CoachType coachType;
+    
 }
