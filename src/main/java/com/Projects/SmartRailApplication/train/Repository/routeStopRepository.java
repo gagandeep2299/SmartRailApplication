@@ -15,5 +15,7 @@ public interface routeStopRepository extends JpaRepository<RouteStop, Long> {
     boolean existsByTrainIdAndStationId(Long trainId, Long sourceStationid);
 
     Optional<RouteStop> findByTrain_IdAndStation_Id(Long trainId, Long sourceStationid);
+
+    List<RouteStop> findByStation_Id(Long id);
     
 }
