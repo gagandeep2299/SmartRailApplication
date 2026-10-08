@@ -36,4 +36,6 @@ public class Seat {
     @Enumerated (EnumType.STRING)
     private SeatType seatType;
 
+    private String seatStatus;
+
 }

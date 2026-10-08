@@ -6,7 +6,6 @@ import lombok.Data;
 
 @Data
 public class CoachRequest {
-    private Long id;
     private Long trainId;
     private String coachNumber;
     private CoachType coachType;

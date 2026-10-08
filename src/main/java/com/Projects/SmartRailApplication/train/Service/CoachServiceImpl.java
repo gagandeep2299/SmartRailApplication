@@ -25,13 +25,13 @@ public class CoachServiceImpl implements CoachService {
     private  trainRepository trainRepository;
 
     @Override
-    public CoachResponse addCoach(Long trainId, CoachRequest coachRequest) {
-        if (coachRepository.existsByTrainIdAndId(trainId, coachRequest.getId())) {
-            throw new IllegalArgumentException("Coach with ID " + coachRequest.getId() + " already exists for train with ID " + trainId);
+    public CoachResponse addCoach(CoachRequest coachRequest) {
+        
+        train train = trainRepository.findById(coachRequest.getTrainId())
+                .orElseThrow(() -> new EntityNotFoundException("Train with ID " + coachRequest.getTrainId() + " does not exist"));
+        if (coachRepository.existsByTrainId_IdAndCoachNumber(train.getId(), coachRequest.getCoachNumber())) {
+            throw new IllegalArgumentException("Coach with number " + coachRequest.getCoachNumber() + " already exists for train with ID " + coachRequest.getTrainId());
         }
-        train train = trainRepository.findById(trainId)
-                .orElseThrow(() -> new EntityNotFoundException("Train with ID " + trainId + " does not exist"));
-
         Coach coach = new Coach();
         coach.setCoachNumber(coachRequest.getCoachNumber());
         coach.setTrainId(train);
@@ -43,7 +43,7 @@ public class CoachServiceImpl implements CoachService {
     public List<CoachResponse> getCoachesByTrainId(Long trainId) {
         trainRepository.findById(trainId)
                 .orElseThrow(() -> new EntityNotFoundException("Train with ID " + trainId + " does not exist"));
-        return coachRepository.findByTrainId(trainId)
+        return coachRepository.findByTrainId_Id(trainId)
         .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -81,6 +81,7 @@ public class CoachServiceImpl implements CoachService {
                 .id(coach.getId())
                 .trainId(coach.getTrainId().getId())
                 .coachNumber(coach.getCoachNumber())
+                .coachType(coach.getCoachType())
                 .build();
     }
     

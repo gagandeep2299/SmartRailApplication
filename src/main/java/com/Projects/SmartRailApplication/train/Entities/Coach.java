@@ -26,7 +26,7 @@ public class Coach {
     private Long id;
 
     @ManyToOne (fetch = FetchType.LAZY)
-    @JoinColumn (name = "train_id")
+    @JoinColumn (name = "trainid")
     private train trainId;
 
     @Column (unique = true)

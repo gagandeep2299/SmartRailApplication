@@ -8,8 +8,10 @@ import com.Projects.SmartRailApplication.train.Entities.Coach;
 
 public interface coachRepository extends JpaRepository<Coach, Long> {
 
-    boolean existsByTrainIdAndId(Long trainId, Long id);
+    boolean existsByTrainId_IdAndId(Long trainId, Long id);
 
-    List<Coach> findByTrainId(Long id);
+    List<Coach> findByTrainId_Id(Long id);
+
+    boolean existsByTrainId_IdAndCoachNumber(Long trainId, String coachNumber);
     
 }

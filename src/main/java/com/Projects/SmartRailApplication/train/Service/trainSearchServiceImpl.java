@@ -1,6 +1,7 @@
 package com.Projects.SmartRailApplication.train.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,7 +39,7 @@ public class trainSearchServiceImpl implements trainSearchService {
     @Override
     public List<TrainSearchResponse> searchTrains(String sourceStationCode, String destinationStationCode,
             LocalDate date) {
-        List<TrainSearchResponse> searchResults = null;
+        List<TrainSearchResponse> searchResults = new ArrayList<>();
         Station sourceStation = stationRepository.findByCode(sourceStationCode);
         if(sourceStation == null) {
             throw new EntityNotFoundException("Source station not found with code: " + sourceStationCode);  
@@ -67,7 +68,7 @@ public class trainSearchServiceImpl implements trainSearchService {
     }
 
     private TrainSearchResponse buildTrainSearchResponse(train train, RouteStop sourceRouteStop, RouteStop destinationRouteStop) {
-        List<Coach> coaches = coachRepository.findByTrainId(train.getId());
+        List<Coach> coaches = coachRepository.findByTrainId_Id(train.getId());
         List<CoachAvailabilityResponse> coachAvailabilityResponses = coaches.stream()
                 .map(this::coachAvailabilityResponses)
                 .toList();
@@ -90,10 +91,11 @@ public class trainSearchServiceImpl implements trainSearchService {
                 .build();
     }
     private CoachAvailabilityResponse coachAvailabilityResponses(Coach coach) {
-        List<Seat> availableSeats = seatRepository.findByCoachId(coach.getId());
+        List<Seat> availableSeats = seatRepository.findByCoachId(coach);
         long totalSeats = availableSeats.size();
         return CoachAvailabilityResponse.builder()
                 .id(coach.getId())
+                .trainId(coach.getTrainId().getId())
                 .coachNumber(coach.getCoachNumber())
                 .coachType(coach.getCoachType())
                 .totalSeats(totalSeats)

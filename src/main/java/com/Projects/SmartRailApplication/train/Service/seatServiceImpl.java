@@ -33,15 +33,16 @@ public class seatServiceImpl implements seatService {
         seat.setCoachId(coach);
         seat.setSeatNumber(seatRequest.getSeatNumber());
         seat.setSeatType(seatRequest.getSeatType());
+        seat.setSeatStatus(seatRequest.getSeatStatus());
         seatRepository.save(seat);
         return mapToResponse(seat);
     }
 
     @Override
     public List<SeatResponse> getSeatsByCoachId(Long coachId) {
-        coachRepository.findById(coachId)
+        Coach coach = coachRepository.findById(coachId)
                 .orElseThrow(() -> new EntityNotFoundException("Coach not found with ID: " + coachId));
-        List<Seat> seats = seatRepository.findByCoachId(coachId);
+        List<Seat> seats = seatRepository.findByCoachId(coach);
         return seats.stream().map(this::mapToResponse).toList();
     }
 
@@ -78,6 +79,7 @@ public class seatServiceImpl implements seatService {
         seatResponse.setCoachId(seat.getCoachId().getId());
         seatResponse.setSeatNumber(seat.getSeatNumber());
         seatResponse.setSeatType(seat.getSeatType());
+        seatResponse.setSeatStatus(seat.getSeatStatus());
         return seatResponse;
     }
 
