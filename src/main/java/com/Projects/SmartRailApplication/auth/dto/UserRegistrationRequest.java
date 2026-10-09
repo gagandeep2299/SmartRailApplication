@@ -7,11 +7,10 @@ import com.Projects.SmartRailApplication.auth.entities.Role;
 import lombok.Data;
 
 @Data 
-public class UserRequest {
+public class UserRegistrationRequest {
     private Long id;
     private String name;
     private String email;
     private String password;
     private Role role;
-    private LocalDateTime createdAt;
 }
