@@ -1,7 +1,5 @@
 package com.Projects.SmartRailApplication.auth.dto;
 
-import java.time.LocalDateTime;
-
 import com.Projects.SmartRailApplication.auth.entities.Role;
 
 import lombok.Data;

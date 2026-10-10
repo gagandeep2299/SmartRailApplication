@@ -70,6 +70,11 @@ public class userServiceImpl implements userService {
             return mapToEntity(user.get());
         }
     
+        @Override
+        public User getUserEntityByEmail(String email) {
+            return userRepository.findByEmailIgnoreCase(email)
+                    .orElseThrow(() -> new EntityNotFoundException("User with email " + email + " does not exist"));
+        }
     private UserResponse mapToEntity(User user) {
         UserResponse userResponse = new UserResponse();
         userResponse.setId(user.getId());
@@ -80,5 +85,7 @@ public class userServiceImpl implements userService {
         userResponse.setUpdatedAt(user.getUpdatedAt());
         return userResponse;
     }
+
+
 
 }
