@@ -47,7 +47,7 @@ public class Booking {
     @JoinColumn (name = "destination_station_id")
     private Station destinationStation;
 
-    @OneToMany (mappedBy = "bookingId", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany (mappedBy = "bookingId", cascade = CascadeType.ALL)
     private List<BookingSeat> bookingSeats = new ArrayList<>();
 
     @ManyToOne (fetch = FetchType.LAZY)

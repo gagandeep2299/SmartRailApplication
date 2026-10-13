@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.Projects.SmartRailApplication.booking.Entities.BookingSeat;
 import com.Projects.SmartRailApplication.booking.Entities.enums.BookingStatus;
 
 import lombok.AllArgsConstructor;
@@ -24,5 +25,5 @@ public class bookingReponse {
     private LocalDate travelDateTime;
     private BookingStatus bookingStatus;
     private BigDecimal totalPrice;
-    private List<BookingSeatResponse> bookingSeats;
+    private List<BookingSeat> bookingSeats;
 }

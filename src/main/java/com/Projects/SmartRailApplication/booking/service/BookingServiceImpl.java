@@ -24,6 +24,7 @@ import com.Projects.SmartRailApplication.train.Entities.train;
 import com.Projects.SmartRailApplication.train.Repository.*;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service 
@@ -46,6 +47,7 @@ public class BookingServiceImpl implements BookingServices {
 
 
     @Override
+    @Transactional 
     public bookingReponse createBooking(bookingRequest bookingRequest,User user) throws EntityNotFoundException {
         train train = trainRepository.findById(bookingRequest.getTrain_id()).orElseThrow(() -> new EntityNotFoundException("Train not found with ID: " + bookingRequest.getTrain_id()));
         Station SourceStation = stationRepository.findById(bookingRequest.getSource_station_id()).orElseThrow(() -> new EntityNotFoundException("Source station not found with ID: " + bookingRequest.getSource_station_id()));
@@ -96,18 +98,12 @@ public class BookingServiceImpl implements BookingServices {
             bookingSeat.setSeatId(seat);
             bookingSeat.setPrice(fare.getFareAmount());
             bookingSeat.setBookingStatus(BookingStatus.CONFIRMED);
-            bookingSeat=bookingSeatRepository.save(bookingSeat);
-            booking.getBookingSeats().add(bookingSeat);
+            //bookingSeat=bookingSeatRepository.save(bookingSeat);
+            booking.addBookingSeat(bookingSeat);
             booking.setTotalPrice(booking.getTotalPrice().add(fare.getFareAmount()));
         }
-
-        System.out.println("Total Price: " + booking.getTotalPrice());
         booking = bookingRepository.save(booking);
         System.out.println(booking.getId());
-        /*for(BookingSeat bookingSeat: booking.getBookingSeats()){
-            bookingSeat.setBookingId(booking);
-            bookingSeat.setId(bookingSeatRepository.save(bookingSeat).getId());
-        }*/
         return mapToBookingResponse(booking);
 
     }
@@ -120,6 +116,7 @@ public class BookingServiceImpl implements BookingServices {
         response.setTravelDateTime(booking.getTravelDateTime());
         response.setBookingStatus(booking.getBookingStatus());
         response.setTotalPrice(booking.getTotalPrice());
+        response.setBookingSeats(booking.getBookingSeats());
         return response;
     }
     
