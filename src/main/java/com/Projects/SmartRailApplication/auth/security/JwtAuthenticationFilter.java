@@ -1,13 +1,14 @@
 package com.Projects.SmartRailApplication.auth.security;
 
 import java.io.IOException;
-import java.util.Collections;
 
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.Projects.SmartRailApplication.auth.entities.CustomUserDetails;
+import com.Projects.SmartRailApplication.auth.entities.User;
+import com.Projects.SmartRailApplication.auth.repository.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,15 +18,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.*;
+
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final String jwtSecret;
+    private final UserRepository userRepository;
 
-    
-    public JwtAuthenticationFilter(String jwtSecret) {
+    public JwtAuthenticationFilter(String jwtSecret, UserRepository userRepository) {
         this.jwtSecret = jwtSecret;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -41,16 +43,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try{
             String email = JWT.require(Algorithm.HMAC512(jwtSecret)).build().verify(token).getSubject();
-            UserDetails principal = User.withUsername(email)
-                        .password("")
-                        .authorities(Collections.emptyList())
-                        .build();
-            Authentication authentication = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found for email: " + email));
+            CustomUserDetails details = new CustomUserDetails(user);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(details, null, details.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
             filterChain.doFilter(request, response);
         } catch(Exception e){
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Invalid or expired JWT token");
+            response.getWriter().write("Invalid or expired JWT token"+ e.getMessage());
             response.getWriter().flush();
         }
     }

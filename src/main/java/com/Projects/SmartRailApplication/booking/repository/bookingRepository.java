@@ -1,4 +1,4 @@
-package com.Projects.SmartRailApplication.booking;
+package com.Projects.SmartRailApplication.booking.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

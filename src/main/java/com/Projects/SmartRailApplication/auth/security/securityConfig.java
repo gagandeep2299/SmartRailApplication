@@ -7,6 +7,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.Projects.SmartRailApplication.auth.repository.UserRepository;
+
 @Configuration 
 public class securityConfig {
     @Value("${jwt.secret}")
@@ -16,11 +18,11 @@ public class securityConfig {
     private long jwtExpiration;
 
     private final CustomAuthenticationManager customAuthenticationManager;
+    private final UserRepository userRepository;
 
-    
-
-    public securityConfig(CustomAuthenticationManager customAuthenticationManager) {
+    public securityConfig(CustomAuthenticationManager customAuthenticationManager, UserRepository userRepository) {
         this.customAuthenticationManager = customAuthenticationManager;
+        this.userRepository = userRepository;
     }
     
     @Bean 
@@ -31,10 +33,11 @@ public class securityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/register").permitAll()
                 .requestMatchers("/api/v1/auth/login").permitAll()
+                //.requestMatchers("/api/v1/*").permitAll() // added for testing purposes, remove this line in production
                 .anyRequest().authenticated()
             )
             .addFilter(authenticationFilter)
-            .addFilterAfter(new JwtAuthenticationFilter(jwtSecret), AuthenticationFilter.class)
+            .addFilterAfter(new JwtAuthenticationFilter(jwtSecret, userRepository), AuthenticationFilter.class)
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
     }

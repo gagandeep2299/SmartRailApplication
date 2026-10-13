@@ -9,7 +9,7 @@ import com.Projects.SmartRailApplication.train.Entities.enums.CoachType;
 
 public interface fareRepository extends JpaRepository<Fare, Long> {
 
-    Optional<Fare> findByTrainIdAndCoachTypeAndSourceStationidAndDestinationStationid(Long trainId,
+    Optional<Fare> findByTrainId_IdAndCoachTypeAndSourceStationid_IdAndDestinationStationid_Id(Long trainId,
             CoachType coachType, Long sourceStationId, Long destinationStationId);
     
 }

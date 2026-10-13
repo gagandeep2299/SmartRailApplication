@@ -52,7 +52,7 @@ public class FareServiceImpl implements FareService {
             throw new IllegalArgumentException("Source station must come before destination station in the train route");
         }
 
-        fareRepository.findByTrainIdAndCoachTypeAndSourceStationidAndDestinationStationid(
+        fareRepository.findByTrainId_IdAndCoachTypeAndSourceStationid_IdAndDestinationStationid_Id(
                 fareRequest.getTrainId(),
                 fareRequest.getCoachType(),
                 fareRequest.getSourceStationid(),
@@ -79,7 +79,7 @@ public class FareServiceImpl implements FareService {
                 .orElseThrow(() -> new EntityNotFoundException("Source Station not found with ID: " + sourceStationId));
         stationRepository.findById(destinationStationId)
                 .orElseThrow(() -> new EntityNotFoundException("Destination Station not found with ID: " + destinationStationId));
-        Fare fare = fareRepository.findByTrainIdAndCoachTypeAndSourceStationidAndDestinationStationid(
+        Fare fare = fareRepository.findByTrainId_IdAndCoachTypeAndSourceStationid_IdAndDestinationStationid_Id(
                 trainId, coachType, sourceStationId, destinationStationId)
                 .orElseThrow(() -> new EntityNotFoundException("Fare not found for the given parameters"));
 

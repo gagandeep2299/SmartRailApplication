@@ -1,6 +1,8 @@
 package com.Projects.SmartRailApplication.booking.dto;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 import com.Projects.SmartRailApplication.booking.Entities.enums.BookingStatus;
 
@@ -16,9 +18,11 @@ import lombok.Setter;
 @AllArgsConstructor 
 @Builder 
 public class bookingReponse {
-    private Long id;
+    private Long bookingId;
     private Long user_id;
     private Long train_id;
-    private LocalDateTime travelDateTime;
+    private LocalDate travelDateTime;
     private BookingStatus bookingStatus;
+    private BigDecimal totalPrice;
+    private List<BookingSeatResponse> bookingSeats;
 }
