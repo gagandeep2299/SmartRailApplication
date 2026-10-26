@@ -15,6 +15,7 @@ import com.Projects.SmartRailApplication.train.Service.RouteStopService;
 import com.Projects.SmartRailApplication.train.dto.RouteStopRequest;
 import com.Projects.SmartRailApplication.train.dto.RouteStopResponse;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
 @RestController 
@@ -29,12 +30,11 @@ public class RouteStopController {
             routeStopService.addRouteStop(trainId, routeStopRequest);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(404).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (EntityExistsException e) {
+            return ResponseEntity.status(409).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(500).body("An error occurred while adding the route stop");
         }
-        routeStopService.addRouteStop(trainId, routeStopRequest);
         return ResponseEntity.ok("Adding route stop for train with ID: " + trainId);
     }
 

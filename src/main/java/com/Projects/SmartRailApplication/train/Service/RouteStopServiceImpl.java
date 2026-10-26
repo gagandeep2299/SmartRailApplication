@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.Projects.SmartRailApplication.train.dto.RouteStopRequest;
 import com.Projects.SmartRailApplication.train.dto.RouteStopResponse;
 
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 
 import com.Projects.SmartRailApplication.train.Entities.RouteStop;
@@ -35,7 +36,7 @@ public class RouteStopServiceImpl implements RouteStopService {
                 .orElseThrow(() -> new EntityNotFoundException("Station not found with ID: " + routeStopRequest.getStationId()));
         
         if(routeStopRepository.existsByTrain_IdAndStopSequence(train.getId(), routeStopRequest.getStopSequence())) {
-            throw new IllegalArgumentException("Route stop already exists for this train and stop sequence");
+            throw new EntityExistsException("Route stop already exists for this train and stop sequence");
         }
         if(routeStopRequest.getArrivalTime() != null && routeStopRequest.getDepartureTime() != null 
             && routeStopRequest.getArrivalTime().isAfter(routeStopRequest.getDepartureTime())) {

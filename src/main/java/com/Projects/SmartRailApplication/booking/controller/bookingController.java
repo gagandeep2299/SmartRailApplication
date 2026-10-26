@@ -40,14 +40,26 @@ public class bookingController {
 
     @GetMapping ("/bookings/{id}")
     public ResponseEntity<?> getBookingById(@PathVariable("id") Long id) {
-        
-        return ResponseEntity.ok().build();
+        try{
+            return ResponseEntity.status(HttpStatus.OK).body(bookingServices.getBookingById(id));
+        } catch (EntityNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch ( Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
-    @GetMapping ("/{userId}/bookings")
-    public ResponseEntity<?> getBookingsByUserId(@PathVariable("userId") Long userId) {
-        
-        return ResponseEntity.ok().build();
+    @GetMapping ("bookings")
+    public ResponseEntity<?> getBookingsByUserId(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        try{
+            return ResponseEntity.status(HttpStatus.OK).body(bookingServices.getBookingByUser(userDetails));
+        } catch(EntityNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+
+        }catch(Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+
+        }
     }
     @GetMapping ("/bookings/{id}/cancel")
     public ResponseEntity<?> cancelBooking(@PathVariable("id") Long id) {

@@ -7,14 +7,16 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.Projects.SmartRailApplication.auth.entities.CustomUserDetails;
 import com.Projects.SmartRailApplication.auth.entities.User;
 import com.Projects.SmartRailApplication.booking.Entities.Booking;
 import com.Projects.SmartRailApplication.booking.Entities.BookingSeat;
+import com.Projects.SmartRailApplication.booking.Entities.SeatReservation;
 import com.Projects.SmartRailApplication.booking.Entities.enums.BookingStatus;
+import com.Projects.SmartRailApplication.booking.dto.ReservationRequest;
 import com.Projects.SmartRailApplication.booking.dto.bookingReponse;
 import com.Projects.SmartRailApplication.booking.dto.bookingRequest;
 import com.Projects.SmartRailApplication.booking.repository.bookingRepository;
-import com.Projects.SmartRailApplication.booking.repository.bookingSeatRepository;
 import com.Projects.SmartRailApplication.train.Entities.Coach;
 import com.Projects.SmartRailApplication.train.Entities.Fare;
 import com.Projects.SmartRailApplication.train.Entities.RouteStop;
@@ -25,7 +27,6 @@ import com.Projects.SmartRailApplication.train.Repository.*;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 
 @Service 
 public class BookingServiceImpl implements BookingServices {
@@ -43,7 +44,7 @@ public class BookingServiceImpl implements BookingServices {
     @Autowired
     private bookingRepository bookingRepository;
     @Autowired 
-    private bookingSeatRepository bookingSeatRepository;
+    private SeatReservationService seatReservationService;
 
 
     @Override
@@ -78,11 +79,12 @@ public class BookingServiceImpl implements BookingServices {
         booking.setSourceStation(SourceStation);
         booking.setDestinationStation(DestinationStation);
         booking.setTravelDateTime(bookingRequest.getTravelDateTime());
-        booking.setBookingStatus(BookingStatus.CREATED);
+        booking.setBookingStatus(BookingStatus.PENDING_PAYMENT);
         booking.setTotalPrice(BigDecimal.ZERO);
 
         for(Long seatId : seatIds) {
             Seat seat = seatRepository.findById(seatId).orElseThrow(() -> new EntityNotFoundException("Seat not found with ID: " + seatId));
+            //  if(seat.getSeatStatus().equals(SeatStatus))
             Coach coach = seat.getCoachId();
             
             if(!coach.getTrainId().getId().equals(train.getId())) {
@@ -97,15 +99,30 @@ public class BookingServiceImpl implements BookingServices {
             bookingSeat.setBookingId(booking);
             bookingSeat.setSeatId(seat);
             bookingSeat.setPrice(fare.getFareAmount());
-            bookingSeat.setBookingStatus(BookingStatus.CONFIRMED);
-            //bookingSeat=bookingSeatRepository.save(bookingSeat);
+            bookingSeat.setBookingStatus(BookingStatus.PENDING_PAYMENT);
             booking.addBookingSeat(bookingSeat);
             booking.setTotalPrice(booking.getTotalPrice().add(fare.getFareAmount()));
         }
         booking = bookingRepository.save(booking);
-        System.out.println(booking.getId());
+        for(BookingSeat bookingSeat : booking.getBookingSeats()){
+            seatReservationService.reserveSeat(new ReservationRequest(
+                                                    bookingSeat.getId(),
+                                                    bookingRequest.getTravelDateTime(),
+                                                    sourceRouteStop.getStopSequence(),
+                                                destinationRouteStop.getStopSequence()));
+        }
         return mapToBookingResponse(booking);
 
+    }
+
+
+    public bookingReponse getBookingById(Long id){
+        Booking booking  = bookingRepository.findById(id).orElseThrow(() -> new EntityNotFoundException());
+        return mapToBookingResponse(booking);
+    }
+    public List<bookingReponse> getBookingByUser(CustomUserDetails userDetails){
+        List<Booking> booking = bookingRepository.findByUserId_Id(userDetails.getUser().getId());
+        return booking.stream().map(this::mapToBookingResponse).toList();
     }
 
     private bookingReponse mapToBookingResponse(Booking booking) {

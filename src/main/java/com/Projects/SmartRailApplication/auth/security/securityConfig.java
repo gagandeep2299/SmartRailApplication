@@ -9,6 +9,8 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import com.Projects.SmartRailApplication.auth.repository.UserRepository;
 
+import jakarta.servlet.DispatcherType;
+
 @Configuration 
 public class securityConfig {
     @Value("${jwt.secret}")
@@ -31,6 +33,7 @@ public class securityConfig {
         authenticationFilter.setFilterProcessesUrl("/api/v1/auth/login");
         http.csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 .requestMatchers("/api/v1/auth/register").permitAll()
                 .requestMatchers("/api/v1/auth/login").permitAll()
                 //.requestMatchers("/api/v1/*").permitAll() // added for testing purposes, remove this line in production
