@@ -10,5 +10,6 @@ import com.Projects.SmartRailApplication.booking.dto.ReservationResponse;
 public interface SeatReservationService {
     public ReservationResponse reserveSeat(ReservationRequest request);
     public void confirmedBookingAfterPayment(Booking booking);
+    public boolean isSeatReserved(Long seatId, java.time.LocalDate travelDate, Long fromStopSequence, Long toStopSequence);
 
 }

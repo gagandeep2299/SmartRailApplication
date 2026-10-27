@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.Projects.SmartRailApplication.booking.service.SeatReservationService;
 import com.Projects.SmartRailApplication.train.Entities.Coach;
 import com.Projects.SmartRailApplication.train.Entities.RouteStop;
 import com.Projects.SmartRailApplication.train.Entities.Seat;
@@ -35,6 +36,8 @@ public class trainSearchServiceImpl implements trainSearchService {
     private coachRepository coachRepository;
     @Autowired 
     private seatRepository seatRepository;
+    @Autowired 
+    private SeatReservationService seatReservationService;
 
     @Override
     public List<TrainSearchResponse> searchTrains(String sourceStationCode, String destinationStationCode,
@@ -65,6 +68,22 @@ public class trainSearchServiceImpl implements trainSearchService {
                 searchResults.add(response);
         }
         return searchResults;
+    }
+
+    @Override 
+    public List<Seat> isTrainAvailable(Long trainId, LocalDate travelDate, Long fromStopSequence, Long toStopSequence) {
+        List<Coach> coaches = coachRepository.findByTrainId_Id(trainId);
+        List<Seat> availableSeats = new ArrayList<>();
+        for(Coach coach : coaches) {
+            availableSeats = seatRepository.findByCoachId(coach);
+            for(Seat seat : availableSeats) {
+                boolean isReserved = seatReservationService.isSeatReserved(seat.getId(), travelDate, fromStopSequence, toStopSequence);
+                if(isReserved) {
+                   availableSeats.remove(seat); 
+                }
+            }
+        }
+        return availableSeats;
     }
 
     private TrainSearchResponse buildTrainSearchResponse(train train, RouteStop sourceRouteStop, RouteStop destinationRouteStop) {

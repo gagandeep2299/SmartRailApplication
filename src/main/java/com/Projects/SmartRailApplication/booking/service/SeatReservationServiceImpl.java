@@ -1,5 +1,6 @@
 package com.Projects.SmartRailApplication.booking.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -69,6 +70,11 @@ public class SeatReservationServiceImpl implements SeatReservationService{
         return toResponse(saved);
     }
 
+    @Override
+    public boolean isSeatReserved(Long seatId, LocalDate travelDate, Long fromStopSequence, Long toStopSequence) {
+        LocalDateTime now = LocalDateTime.now();
+        return reserveRepository.existsConflictingReservation(seatId, travelDate, fromStopSequence, toStopSequence, ReservationStatus.CONFIRMED, ReservationStatus.HELD, now);
+    }
     @Override 
     @Transactional 
     public void confirmedBookingAfterPayment(Booking booking){
@@ -97,5 +103,6 @@ public class SeatReservationServiceImpl implements SeatReservationService{
                 reservation.getExpiresAt()
         );
     }
+
  
 }
