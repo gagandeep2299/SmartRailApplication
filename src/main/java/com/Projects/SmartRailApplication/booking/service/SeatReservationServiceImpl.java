@@ -104,5 +104,34 @@ public class SeatReservationServiceImpl implements SeatReservationService{
         );
     }
 
+    @Override
+    @Transactional
+    public boolean expiredReservation(Long reservationId) {
+        SeatReservation reservation = reserveRepository.findByIdForUpdate(reservationId)
+                .orElseThrow(() -> new EntityNotFoundException("Reservation not found"));
+
+        if (reservation.getStatus() == ReservationStatus.HELD && reservation.getExpiresAt().isBefore(LocalDateTime.now())) {
+            reservation.setStatus(ReservationStatus.EXPIRED);
+            reservation.setExpiresAt(null);
+            reserveRepository.save(reservation);
+            Long bookingId = reservation.getBookingSeat().getBookingId().getId();
+            expireBookingIfAllReservationsExpired(bookingId);
+            return true;
+        }
+        return false;
+    }
+
+    private void expireBookingIfAllReservationsExpired(Long bookingId) {
+        Booking booking = bookingRepository.findByIdForUpdate(bookingId).
+                orElseThrow(() -> new EntityNotFoundException("Booking not found"));
+        if(booking.getBookingStatus() != BookingStatus.PENDING_PAYMENT){
+            return;
+        }
+        long totalReservations = reserveRepository.countActiveCountHold(bookingId, ReservationStatus.HELD, LocalDateTime.now());
+        if(totalReservations == 0){
+            booking.setBookingStatus(BookingStatus.EXPIRED);
+        }
+    }
+
  
 }

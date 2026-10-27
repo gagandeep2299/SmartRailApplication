@@ -3,15 +3,12 @@ package com.Projects.SmartRailApplication.booking.service;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.Projects.SmartRailApplication.auth.entities.CustomUserDetails;
 import com.Projects.SmartRailApplication.auth.entities.User;
 import com.Projects.SmartRailApplication.booking.Entities.Booking;
 import com.Projects.SmartRailApplication.booking.Entities.BookingSeat;
-import com.Projects.SmartRailApplication.booking.Entities.SeatReservation;
 import com.Projects.SmartRailApplication.booking.Entities.enums.BookingStatus;
 import com.Projects.SmartRailApplication.booking.dto.ReservationRequest;
 import com.Projects.SmartRailApplication.booking.dto.bookingReponse;
@@ -27,23 +24,19 @@ import com.Projects.SmartRailApplication.train.Repository.*;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service 
+@RequiredArgsConstructor
 public class BookingServiceImpl implements BookingServices {
 
-    @Autowired 
+    
     private stationRepository stationRepository; 
-    @Autowired
     private trainRepository trainRepository;
-    @Autowired
     private routeStopRepository routeStopRepository;
-    @Autowired
     private seatRepository seatRepository;
-    @Autowired
     private fareRepository fareRepository;
-    @Autowired
     private bookingRepository bookingRepository;
-    @Autowired 
     private SeatReservationService seatReservationService;
 
 
