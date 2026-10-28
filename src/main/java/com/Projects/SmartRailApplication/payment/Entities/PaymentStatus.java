@@ -1,10 +1,9 @@
 package com.Projects.SmartRailApplication.payment.Entities;
 
 public enum PaymentStatus {
-    INITIATED,
-    PROCESSING,
+    PENDING,
     SUCCESS,
     FAILED,
-    REFUNDED_INITIATED, 
+    REFUNDED_PENDING, 
     REFUNDED
 }

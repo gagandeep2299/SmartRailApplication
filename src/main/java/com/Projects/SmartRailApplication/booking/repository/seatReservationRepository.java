@@ -76,4 +76,6 @@ public interface seatReservationRepository extends JpaRepository<SeatReservation
                                 @Param("status") ReservationStatus status,
                                 @Param("now") LocalDateTime now);
     
+    Optional<SeatReservation> findByBookingIdAndSeatId(Long bookingId, Long seatId);
+    
 }
