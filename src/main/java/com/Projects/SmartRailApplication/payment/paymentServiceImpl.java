@@ -8,8 +8,6 @@ import com.Projects.SmartRailApplication.payment.dto.MockPaymentRequest;
 import com.Projects.SmartRailApplication.payment.dto.MockPaymentResponse;
 import com.Projects.SmartRailApplication.payment.mock.MockPaymentOutcome;
 import com.Projects.SmartRailApplication.payment.mock.MockPaymentServer;
-import com.Projects.SmartRailApplication.train.Entities.Seat;
-
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.dao.DuplicateKeyException;
 
@@ -43,21 +42,29 @@ public class paymentServiceImpl implements paymentService {
     @Override 
     @Transactional 
     public PaymentResponse initiatePayment(Long bookingId,PaymentRequest paymentRequest){
-        Booking booking = bookingRepository.findById(bookingId).orElseThrow(()-> new IllegalArgumentException("Booking not found with ID: " + bookingId));
+        String idempotencyKey = paymentRequest.idempotencyKey().trim();
+        Booking booking = bookingRepository.findByIdForUpdate(bookingId).orElseThrow(()-> new IllegalArgumentException("Booking not found with ID: " + bookingId));
+        if (paymentRepository.existsByIdempotencyKey(idempotencyKey)) {
+            throw new DuplicateKeyException("payment with same Idempotent key already processed");
+        };
+        
         if(booking.getBookingStatus() != BookingStatus.PENDING_PAYMENT){
             throw new IllegalStateException("Payment can only be initiated for bookings with PENDING_PAYMENT status.");
         }
-        if (paymentRepository.existsByIdempotencyKey(paymentRequest.idempotencyKey())) {
-            throw new DuplicateKeyException("payment with same Idempotent key already processed");
-        };
-
-        BigDecimal seatAmount = BigDecimal.ZERO;
-        for(BookingSeat seat : booking.getBookingSeats()){
-            SeatReservation seatReservation = seatReservationRepository.findByBookingIdAndSeatId(bookingId, seat.getSeatId().getId()).orElseThrow(() -> new IllegalArgumentException("Seat reservation not found for booking ID: " + bookingId + " and seat ID: " + seat.getSeatId().getId()));
-            if(seatReservation.getStatus() != ReservationStatus.HELD || seatReservation.getExpiresAt().isBefore(LocalDateTime.now())){
+        
+        LocalDateTime now = LocalDateTime.now();
+        List<SeatReservation> seatReservations = seatReservationRepository.findByBookingId(bookingId);
+        for(SeatReservation seatReservation : seatReservations){
+            if(seatReservation.getStatus() != ReservationStatus.HELD ||
+               seatReservation.getExpiresAt().isBefore(now)){
                 throw new IllegalStateException("payment for the seat can only be initiated if the seat is currently held and not expired.");
             }
-            seatAmount = seatAmount.add(seat.getPrice());
+        }
+
+        
+        BigDecimal seatAmount = BigDecimal.ZERO;
+        for(BookingSeat bookingSeat : booking.getBookingSeats()){
+            seatAmount = seatAmount.add(bookingSeat.getPrice());
         }
         if(seatAmount.compareTo(booking.getTotalPrice()) != 0){
             throw new IllegalArgumentException("Payment amount does not match the total price of the seats.");
@@ -66,65 +73,88 @@ public class paymentServiceImpl implements paymentService {
         payment.setBooking_Id(booking);
         payment.setAmount(booking.getTotalPrice());
         payment.setPaymentStatus(PaymentStatus.PENDING);
-        payment.setIdempotencyKey(paymentRequest.idempotencyKey());
-        payment.setCreatedAt(LocalDateTime.now());
-        payment.setUpdatedAt(LocalDateTime.now());
-        paymentRepository.save(payment);
+        payment.setIdempotencyKey(idempotencyKey);
+        payment.setCreatedAt(now);
+        payment.setUpdatedAt(now);
+        paymentRepository.saveAndFlush(payment);
 
         MockPaymentResponse gatewayResponse = mockPaymentServer.charge(
-            new MockPaymentRequest(booking.getTotalPrice(), paymentRequest.idempotencyKey(), defaultPaymentOutcome));
+            new MockPaymentRequest(booking.getTotalPrice(), idempotencyKey, defaultPaymentOutcome));
         
         if(gatewayResponse.outcome() == MockPaymentOutcome.FAILED){
-            List<SeatReservation> seatReservations = seatReservationRepository.findByBookingId(bookingId);
+            payment.setPaymentStatus(PaymentStatus.FAILED);
+            payment.setPaymentReference(gatewayResponse.transactionReference());
+            payment.setUpdatedAt(now);
             for(SeatReservation seatReservation : seatReservations){
-                SeatReservation updatedReservation = seatReservationRepository.findByIdForUpdate(seatReservation.getId()).orElseThrow(() -> new IllegalArgumentException("Seat reservation not found with ID: " + seatReservation.getId()));
-                updatedReservation.setStatus(ReservationStatus.RELEASED);
-                updatedReservation.setExpiresAt(null);
+                seatReservation.release();
             }
-            bookingRepository.findByIdForUpdate(bookingId).ifPresent(b -> b.setBookingStatus(BookingStatus.EXPIRED));
-            throw new IllegalStateException("Payment failed. All held seats have been released and booking status set to EXPIRED.");
+            booking.setBookingStatus(BookingStatus.EXPIRED);
+            return mapPayment(payment);
+        } else if(gatewayResponse.outcome() == MockPaymentOutcome.PENDING){
+            payment.setPaymentStatus(PaymentStatus.PENDING);
+            payment.setPaymentReference(gatewayResponse.transactionReference());
+            payment.setUpdatedAt(now);
+            return mapPayment(payment);    
         }
         
-        
-        paymentRepository.findByIdForUpdate(payment.getId()).ifPresent(p -> {
-            p.setPaymentStatus(gatewayResponse.outcome() == MockPaymentOutcome.SUCCESS ? PaymentStatus.SUCCESS : PaymentStatus.FAILED);
-            p.setPaymentReference(gatewayResponse.transactionReference());
-            p.setUpdatedAt(LocalDateTime.now());
-        });
+        for(SeatReservation seatReservation : seatReservations){
+            if(seatReservation.getStatus() != ReservationStatus.HELD ||
+               seatReservation.getExpiresAt().isBefore(now)){
 
-        bookingRepository.findByIdForUpdate(bookingId).ifPresent(b -> {
-            if(b.getBookingStatus() != BookingStatus.PENDING_PAYMENT){
-                //Initiate the refund since the booking status has changed
-                throw new IllegalStateException("Booking status has changed since payment initiation. Current status: " + b.getBookingStatus());
-            } else{
-                b.setBookingStatus(gatewayResponse.outcome() == MockPaymentOutcome.SUCCESS ? BookingStatus.CONFIRMED : BookingStatus.EXPIRED);
+                initiateRefund(payment,gatewayResponse.transactionReference());
+
+                throw new IllegalStateException("payment for the seat can only be confirmed if the seat is currently held and not expired.");
             }
-        });
-        List<SeatReservation> seatReservations = seatReservationRepository.findByBookingId(bookingId);
-            for(SeatReservation seatReservation : seatReservations){
-                SeatReservation updatedReservation = seatReservationRepository.findByIdForUpdate(seatReservation.getId()).orElseThrow(() -> new IllegalArgumentException("Seat reservation not found with ID: " + seatReservation.getId()));
-                if(updatedReservation.getStatus() != ReservationStatus.HELD || updatedReservation.getExpiresAt().isBefore(LocalDateTime.now())){
-                    //Initiate the refund since the seatReservation status has changed
-                    throw new IllegalStateException("Seat reservation status has changed since payment initiation. Current status: " + updatedReservation.getStatus());
-                } else{
-                    updatedReservation.setStatus(ReservationStatus.CONFIRMED);
-                    updatedReservation.setExpiresAt(null);
-                }
-            }
+        }
 
+        payment.setPaymentStatus(PaymentStatus.SUCCESS);
+        payment.setPaymentReference(gatewayResponse.transactionReference());
+        payment.setUpdatedAt(now);
 
+        for(SeatReservation seatReservation : seatReservations){
+            seatReservation.confirm();
+            seatReservation.getBookingSeat().setBookingStatus(BookingStatus.CONFIRMED);
+        }
 
-        PaymentResponse paymentResponse = new PaymentResponse();
-        paymentResponse.setId(payment.getId());
-        paymentResponse.setBookingId(bookingId);
-        paymentResponse.setAmount(booking.getTotalPrice());
-        paymentResponse.setPaymentStatus(payment.getPaymentStatus());
-        paymentResponse.setTransactionReference(payment.getPaymentReference());
-        
-        // Save the payment details to the database
-        // You can create a new Payment entity and set its properties based on the paymentRequest
-        // Then save it using the paymentRepository
-        
-        return paymentResponse;
+        booking.setBookingStatus(BookingStatus.CONFIRMED);
+        return mapPayment(payment);
     }
+
+    private void initiateRefund(payment payment,String paymentReference) {
+    // TODO: call the real/mock gateway refund API.
+        payment.setPaymentStatus(PaymentStatus.REFUNDED_PENDING);
+        payment.setPaymentReference(paymentReference);
+        payment.setUpdatedAt(LocalDateTime.now());
+
+        for (SeatReservation reservation :
+            seatReservationRepository.findByBookingId(
+                    payment.getBooking_Id().getId())) {
+            reservation.release();
+        }
+
+        payment.getBooking_Id().setBookingStatus(
+                BookingStatus.REFUND_PENDING);
+}
+
+    @Override
+    @Transactional
+    public PaymentResponse getPayment(Long bookingId, String idempotencyKey) {
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new IllegalArgumentException("Booking not found with ID: " + bookingId));
+        payment payment = paymentRepository.findByBookingAndKeyForUpdate(bookingId, idempotencyKey)
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found for the given booking ID and idempotency key."));
+        if (!payment.getBooking_Id().getId().equals(booking.getId())) {
+            throw new IllegalArgumentException("Payment does not belong to the specified booking.");
+        }
+        return mapPayment(payment);
+    }
+
+    private PaymentResponse mapPayment(payment payment) {
+    return PaymentResponse.builder()
+            .id(payment.getId())
+            .bookingId(payment.getBooking_Id().getId())
+            .amount(payment.getAmount())
+            .paymentStatus(payment.getPaymentStatus())
+            .transactionReference(payment.getPaymentReference())
+            .build();
+}
 }

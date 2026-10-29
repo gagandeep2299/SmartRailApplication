@@ -9,5 +9,5 @@ import com.Projects.SmartRailApplication.payment.dto.PaymentResponse;
 public interface paymentService {
 
     public PaymentResponse initiatePayment(Long bookingId, PaymentRequest paymentRequest);
-    
+    public PaymentResponse getPayment(Long bookingId, String idempotencyKey);
 }
