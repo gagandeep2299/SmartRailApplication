@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 import com.Projects.SmartRailApplication.train.dto.SeatRequest;
 import com.Projects.SmartRailApplication.train.dto.SeatResponse;
 
-import jakarta.persistence.EntityNotFoundException;
-
+import com.Projects.SmartRailApplication.api.exception.ResourceConflictException;
+import com.Projects.SmartRailApplication.api.exception.ResourceNotFoundException;
 import com.Projects.SmartRailApplication.train.Entities.Coach;
 import com.Projects.SmartRailApplication.train.Entities.Seat;
 import com.Projects.SmartRailApplication.train.Repository.*;
@@ -25,9 +25,9 @@ public class seatServiceImpl implements seatService {
     @Override
     public SeatResponse addSeat(Long coachId, SeatRequest seatRequest) {
         Coach coach = coachRepository.findById(coachId)
-                .orElseThrow(() -> new EntityNotFoundException("Coach not found with ID: " + coachId));
+                .orElseThrow(() -> new ResourceNotFoundException("Coach not found with ID: " + coachId));
         if(seatRepository.existsByCoachIdAndSeatNumber(coach, seatRequest.getSeatNumber())) {
-            throw new IllegalArgumentException("Seat with this number already exists in the coach");
+            throw new ResourceConflictException("Seat with this number already exists in the coach");
         }
         Seat seat = new Seat();
         seat.setCoachId(coach);
@@ -41,7 +41,7 @@ public class seatServiceImpl implements seatService {
     @Override
     public List<SeatResponse> getSeatsByCoachId(Long coachId) {
         Coach coach = coachRepository.findById(coachId)
-                .orElseThrow(() -> new EntityNotFoundException("Coach not found with ID: " + coachId));
+                .orElseThrow(() -> new ResourceNotFoundException("Coach not found with ID: " + coachId));
         List<Seat> seats = seatRepository.findByCoachId(coach);
         return seats.stream().map(this::mapToResponse).toList();
     }
@@ -49,13 +49,13 @@ public class seatServiceImpl implements seatService {
     @Override
     public SeatResponse getSeatById(Long id) {
         Seat seat = seatRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Seat not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Seat not found with ID: " + id));
         return mapToResponse(seat);
     }
     @Override
     public SeatResponse updateSeat(Long id, SeatRequest seatRequest) {
         Seat seat = seatRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Seat not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Seat not found with ID: " + id));
         if(seatRequest.getSeatNumber() != null) {
             seat.setSeatNumber(seatRequest.getSeatNumber());
         }
@@ -68,7 +68,7 @@ public class seatServiceImpl implements seatService {
     @Override
     public void deleteSeat(Long id) {
         Seat seat = seatRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Seat not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Seat not found with ID: " + id));
         seatRepository.delete(seat);
     }
 

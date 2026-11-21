@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 import com.Projects.SmartRailApplication.train.dto.CoachRequest;
 import com.Projects.SmartRailApplication.train.dto.CoachResponse;
 
-import jakarta.persistence.EntityNotFoundException;
-
+import com.Projects.SmartRailApplication.api.exception.ResourceConflictException;
+import com.Projects.SmartRailApplication.api.exception.ResourceNotFoundException;
 import com.Projects.SmartRailApplication.train.Entities.Coach;
 import com.Projects.SmartRailApplication.train.Entities.train;
 import com.Projects.SmartRailApplication.train.Repository.coachRepository;
@@ -28,9 +28,9 @@ public class CoachServiceImpl implements CoachService {
     public CoachResponse addCoach(CoachRequest coachRequest) {
         
         train train = trainRepository.findById(coachRequest.getTrainId())
-                .orElseThrow(() -> new EntityNotFoundException("Train with ID " + coachRequest.getTrainId() + " does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Train with ID " + coachRequest.getTrainId() + " does not exist"));
         if (coachRepository.existsByTrainId_IdAndCoachNumber(train.getId(), coachRequest.getCoachNumber())) {
-            throw new IllegalArgumentException("Coach with number " + coachRequest.getCoachNumber() + " already exists for train with ID " + coachRequest.getTrainId());
+            throw new ResourceConflictException("Coach with number " + coachRequest.getCoachNumber() + " already exists for train with ID " + coachRequest.getTrainId());
         }
         Coach coach = new Coach();
         coach.setCoachNumber(coachRequest.getCoachNumber());
@@ -42,7 +42,7 @@ public class CoachServiceImpl implements CoachService {
     @Override
     public List<CoachResponse> getCoachesByTrainId(Long trainId) {
         trainRepository.findById(trainId)
-                .orElseThrow(() -> new EntityNotFoundException("Train with ID " + trainId + " does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Train with ID " + trainId + " does not exist"));
         return coachRepository.findByTrainId_Id(trainId)
         .stream()
                 .map(this::mapToResponse)
@@ -51,13 +51,13 @@ public class CoachServiceImpl implements CoachService {
     @Override
     public CoachResponse getCoachById(Long coachId) {
         Coach coach = coachRepository.findById(coachId)
-                .orElseThrow(() -> new EntityNotFoundException("Coach with ID " + coachId + " does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Coach with ID " + coachId + " does not exist"));
         return mapToResponse(coach);
     }
     @Override
     public CoachResponse updateCoach(Long coachId, CoachRequest coachRequest) {
         Coach coach = coachRepository.findById(coachId)
-                .orElseThrow(() -> new EntityNotFoundException("Coach with ID " + coachId + " does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Coach with ID " + coachId + " does not exist"));
         if (coachRequest.getCoachNumber() != null) {
             coach.setCoachNumber(coachRequest.getCoachNumber());
         }
@@ -70,7 +70,7 @@ public class CoachServiceImpl implements CoachService {
     @Override
     public void deleteCoach(Long coachId) {
         Coach coach = coachRepository.findById(coachId)
-                .orElseThrow(() -> new EntityNotFoundException("Coach with ID " + coachId + " does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("Coach with ID " + coachId + " does not exist"));
         coachRepository.delete(coach);
     }
 

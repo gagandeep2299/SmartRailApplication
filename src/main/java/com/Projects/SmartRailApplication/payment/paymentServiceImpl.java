@@ -16,9 +16,10 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.dao.DuplicateKeyException;
+import com.Projects.SmartRailApplication.api.exception.BusinessRuleViolationException;
+import com.Projects.SmartRailApplication.api.exception.ResourceConflictException;
+import com.Projects.SmartRailApplication.api.exception.ResourceNotFoundException;
 
 import com.Projects.SmartRailApplication.booking.Entities.Booking;
 import com.Projects.SmartRailApplication.booking.Entities.BookingSeat;
@@ -43,13 +44,13 @@ public class paymentServiceImpl implements paymentService {
     @Transactional 
     public PaymentResponse initiatePayment(Long bookingId,PaymentRequest paymentRequest){
         String idempotencyKey = paymentRequest.idempotencyKey().trim();
-        Booking booking = bookingRepository.findByIdForUpdate(bookingId).orElseThrow(()-> new IllegalArgumentException("Booking not found with ID: " + bookingId));
+        Booking booking = bookingRepository.findByIdForUpdate(bookingId).orElseThrow(()-> new ResourceNotFoundException("Booking not found with ID: " + bookingId));
         if (paymentRepository.existsByIdempotencyKey(idempotencyKey)) {
-            throw new DuplicateKeyException("payment with same Idempotent key already processed");
+            throw new ResourceConflictException("Payment with same idempotency key already processed");
         };
         
         if(booking.getBookingStatus() != BookingStatus.PENDING_PAYMENT){
-            throw new IllegalStateException("Payment can only be initiated for bookings with PENDING_PAYMENT status.");
+            throw new BusinessRuleViolationException("Payment can only be initiated for bookings with PENDING_PAYMENT status.");
         }
         
         LocalDateTime now = LocalDateTime.now();
@@ -57,7 +58,7 @@ public class paymentServiceImpl implements paymentService {
         for(SeatReservation seatReservation : seatReservations){
             if(seatReservation.getStatus() != ReservationStatus.HELD ||
                seatReservation.getExpiresAt().isBefore(now)){
-                throw new IllegalStateException("payment for the seat can only be initiated if the seat is currently held and not expired.");
+                throw new BusinessRuleViolationException("Payment for the seat can only be initiated if the seat is currently held and not expired.");
             }
         }
 
@@ -67,7 +68,7 @@ public class paymentServiceImpl implements paymentService {
             seatAmount = seatAmount.add(bookingSeat.getPrice());
         }
         if(seatAmount.compareTo(booking.getTotalPrice()) != 0){
-            throw new IllegalArgumentException("Payment amount does not match the total price of the seats.");
+            throw new BusinessRuleViolationException("Payment amount does not match the total price of the seats.");
         }
         payment payment = new payment();
         payment.setBooking_Id(booking);
@@ -103,7 +104,7 @@ public class paymentServiceImpl implements paymentService {
 
                 initiateRefund(payment,gatewayResponse.transactionReference());
 
-                throw new IllegalStateException("payment for the seat can only be confirmed if the seat is currently held and not expired.");
+                throw new BusinessRuleViolationException("Payment for the seat can only be confirmed if the seat is currently held and not expired.");
             }
         }
 
@@ -139,11 +140,11 @@ public class paymentServiceImpl implements paymentService {
     @Override
     @Transactional
     public PaymentResponse getPayment(Long bookingId, String idempotencyKey) {
-        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new IllegalArgumentException("Booking not found with ID: " + bookingId));
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new ResourceNotFoundException("Booking not found with ID: " + bookingId));
         payment payment = paymentRepository.findByBookingAndKeyForUpdate(bookingId, idempotencyKey)
-                .orElseThrow(() -> new IllegalArgumentException("Payment not found for the given booking ID and idempotency key."));
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found for the given booking ID and idempotency key."));
         if (!payment.getBooking_Id().getId().equals(booking.getId())) {
-            throw new IllegalArgumentException("Payment does not belong to the specified booking.");
+            throw new ResourceNotFoundException("Payment not found for the given booking ID and idempotency key.");
         }
         return mapPayment(payment);
     }

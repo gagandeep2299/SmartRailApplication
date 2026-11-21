@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.Projects.SmartRailApplication.train.Service.CoachService;
 import com.Projects.SmartRailApplication.train.dto.CoachRequest;
-
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @RestController 
@@ -24,62 +22,31 @@ public class CoachController {
 
     @PostMapping ("/trains/coaches")
     public ResponseEntity<?> addCoach(@RequestBody CoachRequest coachRequest){ 
-        try{
-            coachService.addCoach(coachRequest);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An unexpected error occurred: " + e.getMessage());
-        }
+        coachService.addCoach(coachRequest);
         return ResponseEntity.ok("Adding coach for train with ID: " + coachRequest.getTrainId());
     }
     
     @GetMapping ("/trains/{trainId}/coaches")
     public ResponseEntity<?> getCoachesByTrainId(@PathVariable Long trainId) {
-        try {
-            return ResponseEntity.ok(coachService.getCoachesByTrainId(trainId));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(400).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An unexpected error occurred: " + e.getMessage());
-        }
+        return ResponseEntity.ok(coachService.getCoachesByTrainId(trainId));
+        
     }
 
     @GetMapping ("/coaches/{id}")
     public ResponseEntity<?> getCoachById(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(coachService.getCoachById(id));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An unexpected error occurred: " + e.getMessage());
-        }
+        return ResponseEntity.ok(coachService.getCoachById(id));
+        
     }
 
     @PutMapping ("/coaches/{id}")
     public ResponseEntity<?> updateCoach(@PathVariable Long id, @RequestBody CoachRequest coachRequest) {
-        try {
-            coachService.updateCoach(id, coachRequest);
-            return ResponseEntity.ok("Coach updated successfully");
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An unexpected error occurred: " + e.getMessage());
-        }
+        coachService.updateCoach(id, coachRequest);
+        return ResponseEntity.ok("Coach updated successfully");
+        
     }
     @DeleteMapping("/coaches/{id}")
     public ResponseEntity<?> deleteCoach(@PathVariable Long id) {
-        try {
-            coachService.deleteCoach(id);
-            return ResponseEntity.ok("Coach deleted successfully");
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An unexpected error occurred: " + e.getMessage());
-        }
+        coachService.deleteCoach(id);
+        return ResponseEntity.ok("Coach deleted successfully");
     }
 }

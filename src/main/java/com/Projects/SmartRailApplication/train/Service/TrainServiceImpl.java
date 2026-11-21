@@ -6,12 +6,12 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.Projects.SmartRailApplication.api.exception.ResourceConflictException;
+import com.Projects.SmartRailApplication.api.exception.ResourceNotFoundException;
 import com.Projects.SmartRailApplication.train.Entities.train;
 import com.Projects.SmartRailApplication.train.Entities.enums.TrainStatus;
 import com.Projects.SmartRailApplication.train.dto.TrainRequest;
 import com.Projects.SmartRailApplication.train.dto.TrainResponse;
-
-import jakarta.persistence.EntityNotFoundException;
 
 import com.Projects.SmartRailApplication.train.Repository.trainRepository;
 
@@ -24,7 +24,7 @@ public class TrainServiceImpl implements trainService {
     @Override
     public void addTrain(TrainRequest trainRequest) {
         if(trainRepository.existsByTrainNumber(trainRequest.getTrainNumber())) {
-            throw new IllegalArgumentException("Train with this number already exists");
+            throw new ResourceConflictException("Train with this number already exists");
         }
         train train = new train();
         train.setName(trainRequest.getName());
@@ -43,14 +43,14 @@ public class TrainServiceImpl implements trainService {
     @Override
     public TrainResponse getTrainById(Long trainId) {
         train train = trainRepository.findById(trainId)
-                .orElseThrow(() -> new EntityNotFoundException("Train not found with ID: " + trainId));
+                .orElseThrow(() -> new ResourceNotFoundException("Train not found with ID: " + trainId));
         return new TrainResponse(train.getId(), train.getTrainNumber(), train.getName(), train.getStatus());
     }
     @Override
     public TrainResponse getTrainByNumber(String trainNumber) {
         Optional<train> train = trainRepository.findByTrainNumber(trainNumber);
         if (train.isEmpty()) {
-            throw new EntityNotFoundException("Train not found with number: " + trainNumber);
+            throw new ResourceNotFoundException("Train not found with number: " + trainNumber);
         }
         return new TrainResponse(train.get().getId(), train.get().getTrainNumber(), train.get().getName(), train.get().getStatus());
     }
@@ -58,7 +58,7 @@ public class TrainServiceImpl implements trainService {
     public List<TrainResponse> getTrainsByName(String name) {
         List<train> trains = trainRepository.findByNameContainingIgnoreCase(name);
         if(trains.isEmpty()) {
-            throw new EntityNotFoundException("No trains found with name containing: " + name);
+            throw new ResourceNotFoundException("No trains found with name containing: " + name);
         }
         return trains.stream()
                 .map(train -> new TrainResponse(train.getId(), train.getName(), train.getTrainNumber(), train.getStatus()))
@@ -68,7 +68,7 @@ public class TrainServiceImpl implements trainService {
     @Override
     public void updateTrain(Long trainId, TrainRequest trainRequest) {
         train train = trainRepository.findById(trainId)
-                .orElseThrow(() -> new EntityNotFoundException("Train not found with ID: " + trainId));
+                .orElseThrow(() -> new ResourceNotFoundException("Train not found with ID: " + trainId));
         train.setName(trainRequest.getName());
         train.setTrainNumber(trainRequest.getTrainNumber());
         train.setStatus(trainRequest.getStatus());
@@ -78,7 +78,7 @@ public class TrainServiceImpl implements trainService {
     @Override
     public void updateTrainStatus(Long trainId, String status) {
         train train = trainRepository.findById(trainId)
-            .orElseThrow(() -> new EntityNotFoundException("Train not found with ID: " + trainId));
+            .orElseThrow(() -> new ResourceNotFoundException("Train not found with ID: " + trainId));
         try{
             train.setStatus(TrainStatus.valueOf(status.toUpperCase()));
         } catch (IllegalArgumentException e) {

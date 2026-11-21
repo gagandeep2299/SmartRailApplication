@@ -1,10 +1,7 @@
 package com.Projects.SmartRailApplication.train.dto;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-
-import com.Projects.SmartRailApplication.train.Entities.Coach;
 import com.Projects.SmartRailApplication.train.Entities.enums.TrainStatus;
 
 import lombok.AllArgsConstructor;

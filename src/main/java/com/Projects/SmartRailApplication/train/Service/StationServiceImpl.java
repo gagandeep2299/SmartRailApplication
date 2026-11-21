@@ -8,8 +8,7 @@ import org.springframework.stereotype.Service;
 import com.Projects.SmartRailApplication.train.dto.StationRequest;
 import com.Projects.SmartRailApplication.train.dto.StationResponse;
 
-import jakarta.persistence.EntityNotFoundException;
-
+import com.Projects.SmartRailApplication.api.exception.ResourceNotFoundException;
 import com.Projects.SmartRailApplication.train.Entities.Station;
 import com.Projects.SmartRailApplication.train.Repository.stationRepository;
 
@@ -21,7 +20,6 @@ public class StationServiceImpl implements StationService {
 
     @Override
     public boolean addStation(StationRequest station) {
-        try{
             Station newStation = new Station();
             newStation.setName(station.getName());
             newStation.setState(station.getState());
@@ -29,11 +27,6 @@ public class StationServiceImpl implements StationService {
             newStation.setCode(station.getCode());
             newStation.setActive(station.isActive());
             stationRepository.save(newStation);
-        } catch (Exception e) {
-            // Handle the exception, e.g., log it or rethrow it
-            System.err.println("Error saving station: " + e.getMessage());
-            return false; // Indicate failure
-        }
         return true; // Indicate success
     }
 
@@ -48,7 +41,7 @@ public class StationServiceImpl implements StationService {
     public StationResponse getStationById(Long id) {
         Station station = stationRepository.findById(id).orElse(null);
         if(station == null) {
-            throw new EntityNotFoundException("Station not found with id: " + id);
+            throw new ResourceNotFoundException("Station not found with id: " + id);
         }
             return new StationResponse(station.getId(), station.getName(), station.getState(), station.getCity(), station.getCode(), station.isActive());
         
@@ -57,7 +50,7 @@ public class StationServiceImpl implements StationService {
     public StationResponse getStationByCode(String code) {
         Station station = stationRepository.findByCode(code);
         if(station == null) {
-            throw new EntityNotFoundException("Station not found with code: " + code);
+            throw new ResourceNotFoundException("Station not found with code: " + code);
         }
             return new StationResponse(station.getId(), station.getName(), station.getState(), station.getCity(), station.getCode(), station.isActive());
     }
@@ -75,7 +68,7 @@ public class StationServiceImpl implements StationService {
     public StationResponse updateStation(Long id, StationRequest station){
         Station existingStation = stationRepository.findById(id).orElse(null);
             if(existingStation == null) {
-                throw new EntityNotFoundException("Station not found with id: " + id);
+                throw new ResourceNotFoundException("Station not found with id: " + id);
             }
             existingStation.setName(station.getName());
             existingStation.setState(station.getState());
@@ -90,7 +83,7 @@ public class StationServiceImpl implements StationService {
     public StationResponse updateStationStatus(Long id, boolean isActive){
         Station existingStation = stationRepository.findById(id).orElse(null);
             if(existingStation == null) {
-                throw new EntityNotFoundException("Station not found with id: " + id);
+                throw new ResourceNotFoundException("Station not found with id: " + id);
             }
             existingStation.setActive(isActive);
             stationRepository.save(existingStation);

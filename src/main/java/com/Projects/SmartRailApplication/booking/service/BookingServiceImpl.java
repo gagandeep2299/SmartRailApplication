@@ -22,6 +22,7 @@ import com.Projects.SmartRailApplication.train.Entities.Station;
 import com.Projects.SmartRailApplication.train.Entities.train;
 import com.Projects.SmartRailApplication.train.Repository.*;
 
+import com.Projects.SmartRailApplication.api.exception.ResourceNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -31,30 +32,30 @@ import lombok.RequiredArgsConstructor;
 public class BookingServiceImpl implements BookingServices {
 
     
-    private stationRepository stationRepository; 
-    private trainRepository trainRepository;
-    private routeStopRepository routeStopRepository;
-    private seatRepository seatRepository;
-    private fareRepository fareRepository;
-    private bookingRepository bookingRepository;
-    private SeatReservationService seatReservationService;
+    private final stationRepository stationRepository; 
+    private final trainRepository trainRepository;
+    private final routeStopRepository routeStopRepository;
+    private final seatRepository seatRepository;
+    private final fareRepository fareRepository;
+    private final bookingRepository bookingRepository;
+    private final SeatReservationService seatReservationService;
 
 
     @Override
     @Transactional 
     public bookingReponse createBooking(bookingRequest bookingRequest,User user) throws EntityNotFoundException {
-        train train = trainRepository.findById(bookingRequest.getTrain_id()).orElseThrow(() -> new EntityNotFoundException("Train not found with ID: " + bookingRequest.getTrain_id()));
-        Station SourceStation = stationRepository.findById(bookingRequest.getSource_station_id()).orElseThrow(() -> new EntityNotFoundException("Source station not found with ID: " + bookingRequest.getSource_station_id()));
-        Station DestinationStation = stationRepository.findById(bookingRequest.getDestination_station_id()).orElseThrow(() -> new EntityNotFoundException("Destination station not found with ID: " + bookingRequest.getDestination_station_id()));
+        train train = trainRepository.findById(bookingRequest.getTrain_id()).orElseThrow(() -> new ResourceNotFoundException("Train not found with ID: " + bookingRequest.getTrain_id()));
+        Station SourceStation = stationRepository.findById(bookingRequest.getSource_station_id()).orElseThrow(() -> new ResourceNotFoundException("Source station not found with ID: " + bookingRequest.getSource_station_id()));
+        Station DestinationStation = stationRepository.findById(bookingRequest.getDestination_station_id()).orElseThrow(() -> new ResourceNotFoundException("Destination station not found with ID: " + bookingRequest.getDestination_station_id()));
         if(SourceStation.getId().equals(DestinationStation.getId())) {
             throw new IllegalArgumentException("Source and destination stations cannot be the same.");
         }
 
         RouteStop sourceRouteStop = routeStopRepository.findByTrain_IdAndStation_Id(bookingRequest.getTrain_id(), bookingRequest.getSource_station_id())
-                .orElseThrow(() -> new EntityNotFoundException("Source station is not part of the train's route."));
+                .orElseThrow(() -> new ResourceNotFoundException("Source station is not part of the train's route."));
         
         RouteStop destinationRouteStop = routeStopRepository.findByTrain_IdAndStation_Id(bookingRequest.getTrain_id(), bookingRequest.getDestination_station_id())
-                .orElseThrow(() -> new EntityNotFoundException("Destination station is not part of the train's route."));
+                .orElseThrow(() -> new ResourceNotFoundException("Destination station is not part of the train's route."));
         
         if(sourceRouteStop.getStopSequence() >= destinationRouteStop.getStopSequence()) {
             throw new IllegalArgumentException("Source station must come before destination station in the train's route");
@@ -76,7 +77,7 @@ public class BookingServiceImpl implements BookingServices {
         booking.setTotalPrice(BigDecimal.ZERO);
 
         for(Long seatId : seatIds) {
-            Seat seat = seatRepository.findById(seatId).orElseThrow(() -> new EntityNotFoundException("Seat not found with ID: " + seatId));
+            Seat seat = seatRepository.findById(seatId).orElseThrow(() -> new ResourceNotFoundException("Seat not found with ID: " + seatId));
             //  if(seat.getSeatStatus().equals(SeatStatus))
             Coach coach = seat.getCoachId();
             
@@ -85,7 +86,7 @@ public class BookingServiceImpl implements BookingServices {
             }
             Fare fare = fareRepository.findByTrainId_IdAndCoachTypeAndSourceStationid_IdAndDestinationStationid_Id(
                 train.getId(), coach.getCoachType(), SourceStation.getId(), DestinationStation.getId())
-                .orElseThrow(() -> new EntityNotFoundException("Fare not found for the selected seat type."));
+                .orElseThrow(() -> new ResourceNotFoundException("Fare not found for the selected seat type."));
                 
                 System.out.println("Reach here");
             BookingSeat bookingSeat = new BookingSeat();
@@ -110,7 +111,7 @@ public class BookingServiceImpl implements BookingServices {
 
 
     public bookingReponse getBookingById(Long id){
-        Booking booking  = bookingRepository.findById(id).orElseThrow(() -> new EntityNotFoundException());
+        Booking booking  = bookingRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Booking not found with ID: " + id));
         return mapToBookingResponse(booking);
     }
     public List<bookingReponse> getBookingByUser(CustomUserDetails userDetails){

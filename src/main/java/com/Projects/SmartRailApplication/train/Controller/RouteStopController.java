@@ -15,8 +15,6 @@ import com.Projects.SmartRailApplication.train.Service.RouteStopService;
 import com.Projects.SmartRailApplication.train.dto.RouteStopRequest;
 import com.Projects.SmartRailApplication.train.dto.RouteStopResponse;
 
-import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityNotFoundException;
 
 @RestController 
 @RequestMapping ("/api/v1")
@@ -26,62 +24,30 @@ public class RouteStopController {
 
     @PostMapping ("/trains/{trainId}/route-stops")
     public ResponseEntity<String> addRouteStop(@PathVariable Long trainId, @RequestBody RouteStopRequest routeStopRequest) {
-        try{
-            routeStopService.addRouteStop(trainId, routeStopRequest);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        } catch (EntityExistsException e) {
-            return ResponseEntity.status(409).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred while adding the route stop");
-        }
+        routeStopService.addRouteStop(trainId, routeStopRequest);
         return ResponseEntity.ok("Adding route stop for train with ID: " + trainId);
     }
 
     @GetMapping ("/route-stops/{id}")
     public ResponseEntity<?> getRouteStopsById(@PathVariable Long id) {
-        RouteStopResponse response;
-        try {
-            response = routeStopService.getRouteStopsById(id);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body("Route stop not found with ID: " + id);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        RouteStopResponse response = routeStopService.getRouteStopsById(id);
         return ResponseEntity.ok(response);
     }
     @GetMapping ("/trains/{trainId}/route-stops")
     public ResponseEntity<?> getRouteStopsByTrain(@PathVariable Long trainId) {
-        try {
-            return ResponseEntity.ok(routeStopService.getRouteStopsByTrain(trainId));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body("Train not found with ID: " + trainId);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred while retrieving route stops for train with ID: " + trainId);
-        }
+        return ResponseEntity.ok(routeStopService.getRouteStopsByTrain(trainId));
+        
     }
     @PutMapping ("/route-stops/{id}")
     public ResponseEntity<?> updateRouteStop(@PathVariable Long id, @RequestBody RouteStopRequest routeStopRequest) {
-        try {
-            RouteStopResponse updatedRouteStop = routeStopService.updateRouteStop(id, routeStopRequest);
-            return ResponseEntity.ok(updatedRouteStop);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body("Route stop not found with ID: " + id);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred while updating the route stop");
-        }
+        RouteStopResponse updatedRouteStop = routeStopService.updateRouteStop(id, routeStopRequest);
+        return ResponseEntity.ok(updatedRouteStop);
+        
     }
     @DeleteMapping("/route-stops/{id}")
     public ResponseEntity<?> deleteRouteStop(@PathVariable Long id) {
-        try {
-            routeStopService.deleteRouteStop(id);
-            return ResponseEntity.ok("Route stop deleted successfully with ID: " + id);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body("Route stop not found with ID: " + id);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred while deleting the route stop");
-        }
+        routeStopService.deleteRouteStop(id);
+        return ResponseEntity.ok("Route stop deleted successfully with ID: " + id);
+        
     }
 }

@@ -18,7 +18,8 @@ import com.Projects.SmartRailApplication.booking.repository.bookingSeatRepositor
 import com.Projects.SmartRailApplication.booking.repository.seatReservationRepository;
 import com.Projects.SmartRailApplication.train.Repository.seatRepository;
 
-import jakarta.persistence.EntityNotFoundException;
+import com.Projects.SmartRailApplication.api.exception.BusinessRuleViolationException;
+import com.Projects.SmartRailApplication.api.exception.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -42,12 +43,12 @@ public class SeatReservationServiceImpl implements SeatReservationService{
                 throw new IllegalArgumentException("Invalid journey segment");
            }
         
-        BookingSeat bookingSeat = bookingseatRepository.findById(request.bookingSeatId()).orElseThrow(()->new EntityNotFoundException());
+        BookingSeat bookingSeat = bookingseatRepository.findById(request.bookingSeatId()).orElseThrow(()->new ResourceNotFoundException("Booking seat not found with ID: " + request.bookingSeatId()));
 
         Long seatId = bookingSeat.getSeatId().getId();
 
         seatRepository.findByIdForUpdate(seatId).
-                        orElseThrow(()->new EntityNotFoundException());
+                        orElseThrow(()->new ResourceNotFoundException("Seat not found with ID: " + seatId));
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -55,7 +56,7 @@ public class SeatReservationServiceImpl implements SeatReservationService{
                                     (seatId, request.journeyDate(), request.fromStopSequence(),
                                      request.toStopSequence(), ReservationStatus.CONFIRMED, ReservationStatus.HELD, now);
         if(alreadyReserved){
-            throw new IllegalStateException("Seat is not available for the journey");
+            throw new BusinessRuleViolationException("Seat is not available for the journey");
         }
 
         SeatReservation reservation = new SeatReservation();
@@ -108,7 +109,7 @@ public class SeatReservationServiceImpl implements SeatReservationService{
     @Transactional
     public boolean expiredReservation(Long reservationId) {
         SeatReservation reservation = reserveRepository.findByIdForUpdate(reservationId)
-                .orElseThrow(() -> new EntityNotFoundException("Reservation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Reservation not found with ID: " + reservationId));
 
         if (reservation.getStatus() == ReservationStatus.HELD && reservation.getExpiresAt().isBefore(LocalDateTime.now())) {
             reservation.setStatus(ReservationStatus.EXPIRED);
@@ -123,7 +124,7 @@ public class SeatReservationServiceImpl implements SeatReservationService{
 
     private void expireBookingIfAllReservationsExpired(Long bookingId) {
         Booking booking = bookingRepository.findByIdForUpdate(bookingId).
-                orElseThrow(() -> new EntityNotFoundException("Booking not found"));
+                orElseThrow(() -> new ResourceNotFoundException("Booking not found with ID: " + bookingId));
         if(booking.getBookingStatus() != BookingStatus.PENDING_PAYMENT){
             return;
         }

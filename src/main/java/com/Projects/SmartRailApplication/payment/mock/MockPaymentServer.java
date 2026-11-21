@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.Projects.SmartRailApplication.api.exception.ResourceConflictException;
 import com.Projects.SmartRailApplication.payment.dto.MockPaymentRequest;
 import com.Projects.SmartRailApplication.payment.dto.MockPaymentResponse;
 
@@ -21,7 +22,7 @@ public class MockPaymentServer {
         return transactions.compute(request.idempotencyKey(), (key, existing) -> {
             if (existing != null) {
                 if (existing.amount().compareTo(request.amount()) != 0) {
-                    throw new IllegalArgumentException("Idempotency key was already used with a different amount");
+                    throw new ResourceConflictException("Idempotency key was already used with a different amount");
                 }
                 return existing;
             }

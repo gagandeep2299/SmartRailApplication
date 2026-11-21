@@ -17,17 +17,11 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping ("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    private authService authService;
+    private final userService userService;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody UserRegistrationRequest userRegistrationRequest) {
-        try{
-            return ResponseEntity.ok(authService.registerUser(userRegistrationRequest));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred while registering user");
-        }
+            return ResponseEntity.ok(userService.createUser(userRegistrationRequest));
     }
 
     @GetMapping ("/login")

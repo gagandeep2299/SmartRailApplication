@@ -136,9 +136,7 @@ public class PaymentFailureL1Test {
 
         entityManager.clear();
         Booking savedBooking = bookingRepository.findById(
-                                booking.getId()).orElseThrow();
-        BookingSeat savedBookingSeat = bookingSeatRepository.findById(
-                                        bookingSeat.getId()).orElseThrow(); 
+                                booking.getId()).orElseThrow(); 
         SeatReservation savedReservation = seatReservationRepository.findById(
                                         reservation.getId()).orElseThrow();
         

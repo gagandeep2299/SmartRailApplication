@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.Projects.SmartRailApplication.api.exception.ResourceNotFoundException;
 import com.Projects.SmartRailApplication.booking.service.SeatReservationService;
 import com.Projects.SmartRailApplication.train.Entities.Coach;
 import com.Projects.SmartRailApplication.train.Entities.RouteStop;
@@ -15,11 +16,8 @@ import com.Projects.SmartRailApplication.train.Entities.Seat;
 import com.Projects.SmartRailApplication.train.Entities.Station;
 import com.Projects.SmartRailApplication.train.Entities.train;
 import com.Projects.SmartRailApplication.train.dto.CoachAvailabilityResponse;
-import com.Projects.SmartRailApplication.train.dto.CoachAvailabilityResponse.CoachAvailabilityResponseBuilder;
-import com.Projects.SmartRailApplication.train.dto.CoachResponse;
 import com.Projects.SmartRailApplication.train.dto.TrainSearchResponse;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 import com.Projects.SmartRailApplication.train.Repository.*;
@@ -45,11 +43,11 @@ public class trainSearchServiceImpl implements trainSearchService {
         List<TrainSearchResponse> searchResults = new ArrayList<>();
         Station sourceStation = stationRepository.findByCode(sourceStationCode);
         if(sourceStation == null) {
-            throw new EntityNotFoundException("Source station not found with code: " + sourceStationCode);  
+            throw new ResourceNotFoundException("Source station not found with code: " + sourceStationCode);  
         }
         Station destinationStation = stationRepository.findByCode(destinationStationCode);
         if(destinationStation == null) {
-            throw new EntityNotFoundException("Destination station not found with code: " + destinationStationCode);  
+            throw new ResourceNotFoundException("Destination station not found with code: " + destinationStationCode);  
         }
 
         List<RouteStop> sourceRouteStops = routeStopRepository.findByStation_Id(sourceStation.getId());

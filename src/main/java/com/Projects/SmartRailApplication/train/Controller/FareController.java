@@ -17,7 +17,6 @@ import com.Projects.SmartRailApplication.train.Service.FareService;
 import com.Projects.SmartRailApplication.train.dto.FareRequest;
 import com.Projects.SmartRailApplication.train.dto.FareResponse;
 
-import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -28,66 +27,33 @@ public class FareController {
 
     @PostMapping("/trains/{trainId}/fares")
     public ResponseEntity<?> createFare(@RequestBody FareRequest fareRequest) {
-        try{
-            fareService.createFare(fareRequest);
-        } catch (EntityNotFoundException e){
-            return ResponseEntity.status(404).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        fareService.createFare(fareRequest);
         return ResponseEntity.ok().build();
     }
     @GetMapping ("/trains/{trainId}/fares")
     public ResponseEntity<?> getFare(@PathVariable Long trainId, @RequestParam Long sourceStationId, @RequestParam Long destinationStationId, @RequestParam CoachType coachType) {
-        try {
-            FareResponse fareResponse = fareService.getFare(trainId, sourceStationId, destinationStationId, coachType);
-            return ResponseEntity.ok(fareResponse);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        FareResponse fareResponse = fareService.getFare(trainId, sourceStationId, destinationStationId, coachType);
+        return ResponseEntity.ok(fareResponse);
     }
 
     @GetMapping("/fares/{id}")
     public ResponseEntity<?> getFareById(@PathVariable Long id) {
-        try {
-            FareResponse fareResponse = fareService.getFareById(id);
-            return ResponseEntity.ok(fareResponse);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        FareResponse fareResponse = fareService.getFareById(id);
+        return ResponseEntity.ok(fareResponse);
+        
     }
 
     @PutMapping("/fares/{id}")
     public ResponseEntity<?> updateFare(@PathVariable Long id, @RequestBody FareRequest fareRequest) {
-        try {
-            FareResponse fareResponse = fareService.updateFare(id, fareRequest);
-            return ResponseEntity.ok(fareResponse);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        FareResponse fareResponse = fareService.updateFare(id, fareRequest);
+        return ResponseEntity.ok(fareResponse);
+        
     }
     @DeleteMapping("/fares/{id}")
     public ResponseEntity<?> deleteFare(@PathVariable Long id) {
-        try {
-            fareService.deleteFare(id);
-            return ResponseEntity.ok().build();
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+        fareService.deleteFare(id);
+        return ResponseEntity.ok().build();
+        
     }
 
 }

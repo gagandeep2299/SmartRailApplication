@@ -18,7 +18,6 @@ import com.Projects.SmartRailApplication.train.Service.StationService;
 import com.Projects.SmartRailApplication.train.dto.StationRequest;
 import com.Projects.SmartRailApplication.train.dto.StationResponse;
 
-import jakarta.persistence.EntityNotFoundException;
 @RestController
 @RequestMapping("/api/v1/stations")
 public class StationController {
@@ -28,11 +27,7 @@ public class StationController {
     
     @PostMapping()
     public ResponseEntity<?> addStation(@RequestBody StationRequest station) {
-        if (stationService.addStation(station)) {
-            return ResponseEntity.ok("Adding new station: " + station.getName());
-        } else {
-            return ResponseEntity.status(500).body("Failed to add station: " + station.getName());
-        }
+        return ResponseEntity.ok("Adding new station: " + station.getName());
     }
 
     @GetMapping()
@@ -43,60 +38,27 @@ public class StationController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getStationById(@PathVariable Long id) {
-        StationResponse station;
-        try{
-         station = stationService.getStationById(id); 
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body("Station not found with id: " + id);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred while retrieving the station");
-        }
+        StationResponse station = stationService.getStationById(id); 
         return ResponseEntity.ok(station);
     }
     @GetMapping ("/code/{code}")
     public ResponseEntity<?> getStationByCode(@PathVariable String code) {
-        StationResponse station;
-        try{
-            station = stationService.getStationByCode(code); 
-            } catch (EntityNotFoundException e) {
-                return ResponseEntity.status(404).body("Station not found with code: " + code);
-            } catch (Exception e) {
-                return ResponseEntity.status(500).body("An error occurred while retrieving the station");
-            }
+        StationResponse station = stationService.getStationByCode(code); 
         return ResponseEntity.ok(station);
     }
     @GetMapping ("/search")
     public ResponseEntity<?> searchStations(@RequestParam String query) {
-        List<StationResponse> stations;
-        try{
-            stations = stationService.searchStations(query);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error searching stations: " + e.getMessage());
-        }
+        List<StationResponse> stations = stationService.searchStations(query);
         return ResponseEntity.ok(stations);
     }
     @PutMapping ("/{id}")
     public ResponseEntity<?> updateStation(@PathVariable Long id, @RequestBody StationRequest station) {
-        StationResponse station1;
-        try{
-            station1 = stationService.updateStation(id, station); 
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body("Station not found with id: " + id);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred while updating the station"+ e.getMessage());
-        }
+        StationResponse station1 = stationService.updateStation(id, station);
         return ResponseEntity.ok().body(station1);
     }
     @PatchMapping("/{id}/status")
     public ResponseEntity<?> updateStationStatus(@PathVariable Long id, @RequestParam boolean status) {
-        StationResponse station;
-        try {
-            station = stationService.updateStationStatus(id, status);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(404).body("Station not found with id: " + id);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred while updating station status" + e.getMessage());
-        }
+        StationResponse station = stationService.updateStationStatus(id, status);
         return ResponseEntity.ok().body(station);
     }
     

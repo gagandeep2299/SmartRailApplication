@@ -3,14 +3,17 @@ package com.Projects.SmartRailApplication.auth.service;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.Projects.SmartRailApplication.api.exception.ResourceConflictException;
+import com.Projects.SmartRailApplication.api.exception.ResourceNotFoundException;
 import com.Projects.SmartRailApplication.auth.dto.UserRegistrationRequest;
 import com.Projects.SmartRailApplication.auth.dto.UserResponse;
+import com.Projects.SmartRailApplication.auth.entities.Role;
 import com.Projects.SmartRailApplication.auth.entities.User;
 import com.Projects.SmartRailApplication.auth.repository.UserRepository;
 
-import jakarta.persistence.EntityNotFoundException;
 
 @Service 
 public class userServiceImpl implements userService {
@@ -21,13 +24,13 @@ public class userServiceImpl implements userService {
     public UserResponse createUser(UserRegistrationRequest userRegistrationRequest) {
         Optional<User> users = userRepository.findByEmailIgnoreCase(userRegistrationRequest.getEmail());
         if(users.isPresent()) {
-            throw new IllegalArgumentException("User with this email already exists");
+            throw new ResourceConflictException("User with this email already exists");
         }
         User user = new User();
         user.setName(userRegistrationRequest.getName());
         user.setEmail(userRegistrationRequest.getEmail());
-        user.setPassword(userRegistrationRequest.getPassword());
-        user.setRole(userRegistrationRequest.getRole());
+        user.setPassword(new BCryptPasswordEncoder().encode(userRegistrationRequest.getPassword()));
+        user.setRole(Role.USER); // Default role
         user.setCreatedAt(java.time.LocalDateTime.now());
         user.setUpdatedAt(java.time.LocalDateTime.now());
         return mapToEntity(userRepository.save(user));
@@ -37,14 +40,14 @@ public class userServiceImpl implements userService {
     @Override
     public UserResponse getUser(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User with ID " + id + " does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID " + id + " does not exist"));
         return mapToEntity(user);
     }
 
     @Override
     public UserResponse updateUser(Long id, UserRegistrationRequest userRegistrationRequest) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User with ID " + id + " does not exist"));
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID " + id + " does not exist"));
         if(userRegistrationRequest.getName() != null) {
             user.setName(userRegistrationRequest.getName());
         }
@@ -52,10 +55,7 @@ public class userServiceImpl implements userService {
             user.setEmail(userRegistrationRequest.getEmail());
         }
         if(userRegistrationRequest.getPassword() != null) {
-            user.setPassword(userRegistrationRequest.getPassword());
-        }
-        if(userRegistrationRequest.getRole() != null) {
-            user.setRole(userRegistrationRequest.getRole());
+            user.setPassword(new BCryptPasswordEncoder().encode(userRegistrationRequest.getPassword()));
         }
         user.setUpdatedAt(java.time.LocalDateTime.now());
         return mapToEntity(userRepository.save(user));
@@ -65,7 +65,7 @@ public class userServiceImpl implements userService {
         public UserResponse getUserByEmail(String email) {
             Optional<User> user = userRepository.findByEmailIgnoreCase(email);
             if(user.isEmpty()) {
-                throw new EntityNotFoundException("User with email " + email + " does not exist");
+                throw new ResourceNotFoundException("User with email " + email + " does not exist");
             }
             return mapToEntity(user.get());
         }
@@ -73,7 +73,7 @@ public class userServiceImpl implements userService {
         @Override
         public User getUserEntityByEmail(String email) {
             return userRepository.findByEmailIgnoreCase(email)
-                    .orElseThrow(() -> new EntityNotFoundException("User with email " + email + " does not exist"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User with email " + email + " does not exist"));
         }
     private UserResponse mapToEntity(User user) {
         UserResponse userResponse = new UserResponse();

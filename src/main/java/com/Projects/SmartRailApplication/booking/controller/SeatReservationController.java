@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.Projects.SmartRailApplication.booking.dto.ReservationRequest;
 import com.Projects.SmartRailApplication.booking.service.SeatReservationService;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @RestController 
@@ -21,15 +20,7 @@ public class SeatReservationController {
 
     @PostMapping 
     public ResponseEntity<?> reserveSeat(@RequestBody ReservationRequest request){
-        try{
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.reserveSeat(request));
-        } catch (EntityNotFoundException exception){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
-        } catch ( IllegalArgumentException exception){
-            return ResponseEntity.badRequest().body(exception.getMessage());
-        } catch (IllegalStateException e){
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        }
-
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.reserveSeat(request));
+        
     }
 }
