@@ -110,8 +110,11 @@ public class BookingServiceImpl implements BookingServices {
     }
 
 
-    public bookingReponse getBookingById(Long id){
-        Booking booking  = bookingRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Booking not found with ID: " + id));
+    public bookingReponse getBookingById(Long userId, Long id){
+        Booking booking  = bookingRepository.findByIdAndUser_Id(id, userId);
+        if (booking == null) {
+            throw new ResourceNotFoundException("Booking not found with ID: " + id);
+        }
         return mapToBookingResponse(booking);
     }
     public List<bookingReponse> getBookingByUser(CustomUserDetails userDetails){

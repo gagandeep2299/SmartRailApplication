@@ -3,10 +3,12 @@ package com.Projects.SmartRailApplication.auth.security;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.Projects.SmartRailApplication.auth.entities.Role;
 import com.Projects.SmartRailApplication.auth.repository.UserRepository;
 
 import jakarta.servlet.DispatcherType;
@@ -36,6 +38,21 @@ public class securityConfig {
                 .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 .requestMatchers("/api/v1/auth/register").permitAll()
                 .requestMatchers("/api/v1/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST,"/api/v1/trains/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT,"/api/v1/trains/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.PATCH,"/api/v1/trains/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.POST,"/api/v1/stations").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT,"/api/v1/stations/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.PATCH,"/api/v1/stations/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.POST,"/api/v1/coaches/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT,"/api/v1/coaches/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.DELETE,"/api/v1/coaches/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT,"/api/v1/seats/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.DELETE,"/api/v1/seats/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT,"/api/v1/fares/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.DELETE,"/api/v1/fares/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.PUT,"/api/v1/route-stops/**").hasRole(Role.ADMIN.name())
+                .requestMatchers(HttpMethod.DELETE,"/api/v1/route-stops/**").hasRole(Role.ADMIN.name())
                 //.requestMatchers("/api/v1/*").permitAll() // added for testing purposes, remove this line in production
                 .anyRequest().authenticated()
             )

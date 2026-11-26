@@ -9,6 +9,6 @@ import com.Projects.SmartRailApplication.booking.dto.bookingRequest;
 
 public interface BookingServices {
     public bookingReponse createBooking(bookingRequest bookingRequest,User user);
-    public bookingReponse getBookingById(Long bookingId);
+    public bookingReponse getBookingById(Long userId, Long id);
     public List<bookingReponse> getBookingByUser(CustomUserDetails userDetails);
 }

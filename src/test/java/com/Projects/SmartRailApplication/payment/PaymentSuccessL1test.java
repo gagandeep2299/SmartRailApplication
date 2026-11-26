@@ -14,6 +14,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.Projects.SmartRailApplication.auth.entities.User;
+import com.Projects.SmartRailApplication.auth.repository.UserRepository;
 import com.Projects.SmartRailApplication.booking.Entities.Booking;
 import com.Projects.SmartRailApplication.booking.Entities.BookingSeat;
 import com.Projects.SmartRailApplication.booking.Entities.SeatReservation;
@@ -86,8 +88,21 @@ class PaymentSuccessL1Test {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired 
+    private UserRepository UserRepository;
     @Test
     void successfulPaymentUpdatesAllPersistedStates() {
+
+        User testUser = new User();
+        testUser.setName("Test User");
+        testUser.setEmail("testUser@email.com");
+        testUser.setPassword("password");
+        testUser.setCreatedAt(LocalDateTime.now());
+        testUser.setUpdatedAt(LocalDateTime.now());
+        UserRepository.saveAndFlush(testUser);
+        User user= UserRepository.findByEmailIgnoreCase(testUser.getEmail()).get();
+        
         train testTrain = new train();
         testTrain.setTrainNumber("SR-" + UUID.randomUUID());
         testTrain.setName("Test Train");
@@ -108,6 +123,7 @@ class PaymentSuccessL1Test {
         seat = seatRepository.saveAndFlush(seat);
 
         Booking booking = new Booking();
+        booking.setUser(user);
         booking.setTrain(testTrain);
         booking.setTravelDateTime(LocalDate.now().plusDays(1));
         booking.setBookingStatus(BookingStatus.PENDING_PAYMENT);
@@ -133,7 +149,7 @@ class PaymentSuccessL1Test {
         reservation = seatReservationRepository.saveAndFlush(reservation);
 
         String idempotencyKey = "Success-payment-"+UUID.randomUUID();
-        PaymentResponse response = paymentService.initiatePayment(
+        PaymentResponse response = paymentService.initiatePayment(user.getId(),
                 booking.getId(), new PaymentRequest(idempotencyKey));
 
 

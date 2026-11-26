@@ -20,6 +20,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.Projects.SmartRailApplication.auth.entities.User;
 import com.Projects.SmartRailApplication.booking.Entities.Booking;
 import com.Projects.SmartRailApplication.booking.Entities.BookingSeat;
 import com.Projects.SmartRailApplication.booking.Entities.SeatReservation;
@@ -83,8 +84,19 @@ public class PaymentFailureL1Test {
 
     @Autowired
     private EntityManager entityManager;
+    @Autowired
+        private com.Projects.SmartRailApplication.auth.repository.UserRepository UserRepository;
     @Test 
     public void testPaymentFailureScenario() {
+        User testUser = new User();
+        testUser.setName("Test User");
+        testUser.setEmail("testUser@email.com");
+        testUser.setPassword("password");
+        testUser.setCreatedAt(LocalDateTime.now());
+        testUser.setUpdatedAt(LocalDateTime.now());
+        UserRepository.saveAndFlush(testUser);
+        User user= UserRepository.findByEmailIgnoreCase(testUser.getEmail()).get();
+
         train testTrain = new train();
         testTrain.setTrainNumber("SR-" + UUID.randomUUID());
         testTrain.setName("Test Train");
@@ -105,6 +117,7 @@ public class PaymentFailureL1Test {
         seat = seatRepository.saveAndFlush(seat);
 
         Booking booking = new Booking();
+        booking.setUser(user);
         booking.setTrain(testTrain);
         booking.setTravelDateTime(LocalDate.now().plusDays(1));
         booking.setBookingStatus(BookingStatus.PENDING_PAYMENT);
@@ -130,7 +143,7 @@ public class PaymentFailureL1Test {
         reservation = seatReservationRepository.saveAndFlush(reservation);
 
         String idempotencyKey = "Failed-payment-"+UUID.randomUUID();
-        PaymentResponse response = paymentService.initiatePayment(
+        PaymentResponse response = paymentService.initiatePayment(user.getId(),
                 booking.getId(), new PaymentRequest(idempotencyKey));
 
 

@@ -19,7 +19,7 @@ public class SeatReservationController {
     private final SeatReservationService service;
 
     @PostMapping 
-    public ResponseEntity<?> reserveSeat(@RequestBody ReservationRequest request){
+    public ResponseEntity<?> reserveSeat( @RequestBody ReservationRequest request){
         return ResponseEntity.status(HttpStatus.CREATED).body(service.reserveSeat(request));
         
     }

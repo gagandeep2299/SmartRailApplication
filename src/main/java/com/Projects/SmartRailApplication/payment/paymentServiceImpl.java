@@ -42,9 +42,10 @@ public class paymentServiceImpl implements paymentService {
 
     @Override 
     @Transactional 
-    public PaymentResponse initiatePayment(Long bookingId,PaymentRequest paymentRequest){
+    public PaymentResponse initiatePayment(Long userId,Long bookingId,PaymentRequest paymentRequest){
         String idempotencyKey = paymentRequest.idempotencyKey().trim();
-        Booking booking = bookingRepository.findByIdForUpdate(bookingId).orElseThrow(()-> new ResourceNotFoundException("Booking not found with ID: " + bookingId));
+        Booking booking = bookingRepository.findByIdAndUserIdForUpdate(bookingId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with ID: " + bookingId));
         if (paymentRepository.existsByIdempotencyKey(idempotencyKey)) {
             throw new ResourceConflictException("Payment with same idempotency key already processed");
         };
@@ -139,8 +140,11 @@ public class paymentServiceImpl implements paymentService {
 
     @Override
     @Transactional
-    public PaymentResponse getPayment(Long bookingId, String idempotencyKey) {
-        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new ResourceNotFoundException("Booking not found with ID: " + bookingId));
+    public PaymentResponse getPayment(Long userId, Long bookingId, String idempotencyKey) {
+        Booking booking = bookingRepository.findByIdAndUser_Id(bookingId, userId);
+        if (booking == null) {
+            throw new ResourceNotFoundException("Booking not found with ID: " + bookingId);
+        }
         payment payment = paymentRepository.findByBookingAndKeyForUpdate(bookingId, idempotencyKey)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for the given booking ID and idempotency key."));
         if (!payment.getBooking_Id().getId().equals(booking.getId())) {

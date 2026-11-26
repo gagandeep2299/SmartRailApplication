@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.Projects.SmartRailApplication.api.exception.ResourceConflictException;
 import com.Projects.SmartRailApplication.payment.dto.MockPaymentRequest;
 
 class MockPaymentServerTest {
@@ -32,7 +33,7 @@ class MockPaymentServerTest {
         MockPaymentServer server = new MockPaymentServer();
         server.charge(new MockPaymentRequest(new BigDecimal("10.00"), "same-key", MockPaymentOutcome.SUCCESS));
 
-        assertThrows(IllegalArgumentException.class, () -> server.charge(
+        assertThrows(ResourceConflictException.class, () -> server.charge(
                 new MockPaymentRequest(new BigDecimal("11.00"), "same-key", MockPaymentOutcome.SUCCESS)));
     }
 }

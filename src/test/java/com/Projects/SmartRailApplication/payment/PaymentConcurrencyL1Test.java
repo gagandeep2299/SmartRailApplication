@@ -24,6 +24,9 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.Projects.SmartRailApplication.api.exception.BusinessRuleViolationException;
+import com.Projects.SmartRailApplication.auth.entities.User;
+import com.Projects.SmartRailApplication.auth.repository.UserRepository;
 import com.Projects.SmartRailApplication.booking.Entities.Booking;
 import com.Projects.SmartRailApplication.booking.Entities.BookingSeat;
 import com.Projects.SmartRailApplication.booking.Entities.SeatReservation;
@@ -84,8 +87,21 @@ public class PaymentConcurrencyL1Test {
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+        private UserRepository UserRepository;
+
     @Test
     public void testConcurrentPaymentInitiation() throws Exception {
+
+        User testUser = new User();
+        testUser.setName("Test User");
+        testUser.setEmail("testUser@email.com");
+        testUser.setPassword("password");
+        testUser.setCreatedAt(LocalDateTime.now());
+        testUser.setUpdatedAt(LocalDateTime.now());
+        UserRepository.saveAndFlush(testUser);
+        User user= UserRepository.findByEmailIgnoreCase(testUser.getEmail()).get();
+
         train testTrain = new train();
         testTrain.setTrainNumber("SR-" + UUID.randomUUID());
         testTrain.setName("Test Train");
@@ -106,6 +122,7 @@ public class PaymentConcurrencyL1Test {
         seat = seatRepository.saveAndFlush(seat);
 
         Booking booking = new Booking();
+        booking.setUser(user);
         booking.setTrain(testTrain);
         booking.setTravelDateTime(LocalDate.now().plusDays(1));
         booking.setBookingStatus(BookingStatus.PENDING_PAYMENT);
@@ -144,10 +161,10 @@ public class PaymentConcurrencyL1Test {
 
         try{
             Future<PaymentAttempt> first = executor.submit(
-                ()->runPaymentAttempt(bookingId,idempotencyKey1,ready,start)
+                ()->runPaymentAttempt(user.getId(),bookingId,idempotencyKey1,ready,start)
             );
             Future<PaymentAttempt> second = executor.submit(
-                ()->runPaymentAttempt(bookingId,idempotencyKey2,ready,start)
+                ()->runPaymentAttempt(user.getId(),bookingId,idempotencyKey2,ready,start)
             );
             assertTrue(ready.await(10,TimeUnit.SECONDS),
                     "Both payment tasks should be ready before starting.");
@@ -167,7 +184,7 @@ public class PaymentConcurrencyL1Test {
                     firstAttempt.response() == null ? firstAttempt : secondAttempt;
             assertEquals(PaymentStatus.SUCCESS, successfulAttempt.response().getPaymentStatus());
             assertNotNull(successfulAttempt.response().getTransactionReference());
-            assertTrue(rejectedAttempt.failure() instanceof IllegalStateException,
+            assertTrue(rejectedAttempt.failure() instanceof BusinessRuleViolationException,
                     "The second request should be rejected after the booking is confirmed.");
 
             entityManager.clear();
@@ -191,6 +208,7 @@ public class PaymentConcurrencyL1Test {
         }
     }
     private PaymentAttempt runPaymentAttempt(
+        Long userId,
         Long bookingId,
         String idempotencyKey,
         CountDownLatch ready,
@@ -201,7 +219,7 @@ public class PaymentConcurrencyL1Test {
         }
 
         try {
-            PaymentResponse response = paymentService.initiatePayment(
+            PaymentResponse response = paymentService.initiatePayment(userId,
                     bookingId, new PaymentRequest(idempotencyKey));
             return new PaymentAttempt(response, null);
         } catch (RuntimeException exception) {

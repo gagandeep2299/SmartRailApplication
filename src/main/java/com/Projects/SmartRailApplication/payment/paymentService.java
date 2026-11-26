@@ -8,6 +8,6 @@ import com.Projects.SmartRailApplication.payment.dto.PaymentResponse;
 @Service 
 public interface paymentService {
 
-    public PaymentResponse initiatePayment(Long bookingId, PaymentRequest paymentRequest);
-    public PaymentResponse getPayment(Long bookingId, String idempotencyKey);
+    public PaymentResponse initiatePayment(Long userId,Long bookingId, PaymentRequest paymentRequest);
+    public PaymentResponse getPayment(Long userId,Long bookingId, String idempotencyKey);
 }

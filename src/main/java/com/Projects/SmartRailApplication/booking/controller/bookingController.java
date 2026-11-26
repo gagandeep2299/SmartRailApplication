@@ -29,8 +29,8 @@ public class bookingController {
     }
 
     @GetMapping ("/bookings/{id}")
-    public ResponseEntity<?> getBookingById(@PathVariable("id") Long id) {
-        return ResponseEntity.status(HttpStatus.OK).body(bookingServices.getBookingById(id));
+    public ResponseEntity<?> getBookingById(@AuthenticationPrincipal CustomUserDetails userDetails,@PathVariable("id") Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(bookingServices.getBookingById(userDetails.getUser().getId(), id));
         
     }
 
@@ -40,7 +40,7 @@ public class bookingController {
         
     }
     @GetMapping ("/bookings/{id}/cancel")
-    public ResponseEntity<?> cancelBooking(@PathVariable("id") Long id) {
+    public ResponseEntity<?> cancelBooking(@AuthenticationPrincipal CustomUserDetails userDetails,@PathVariable("id") Long id) {
         return ResponseEntity.ok().build();
     }
 }

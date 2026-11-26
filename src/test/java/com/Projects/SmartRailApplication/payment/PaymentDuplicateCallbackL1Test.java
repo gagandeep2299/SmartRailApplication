@@ -19,6 +19,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.Projects.SmartRailApplication.auth.entities.User;
+import com.Projects.SmartRailApplication.auth.repository.UserRepository;
 import com.Projects.SmartRailApplication.booking.Entities.Booking;
 import com.Projects.SmartRailApplication.booking.Entities.BookingSeat;
 import com.Projects.SmartRailApplication.booking.Entities.SeatReservation;
@@ -78,9 +80,20 @@ public class PaymentDuplicateCallbackL1Test {
 
     @Autowired
     private EntityManager entityManager;
+    @Autowired
+        private UserRepository UserRepository;
 
     @Test 
     public void testDuplicatePaymentCallback() {
+        User testUser = new User();
+        testUser.setName("Test User");
+        testUser.setEmail("testUser@email.com");
+        testUser.setPassword("password");
+        testUser.setCreatedAt(LocalDateTime.now());
+        testUser.setUpdatedAt(LocalDateTime.now());
+        UserRepository.saveAndFlush(testUser);
+        User user= UserRepository.findByEmailIgnoreCase(testUser.getEmail()).get();
+
         train testTrain = new train();
         testTrain.setTrainNumber("SR-" + UUID.randomUUID());
         testTrain.setName("Test Duplicate Train");
@@ -101,6 +114,7 @@ public class PaymentDuplicateCallbackL1Test {
         seat = seatRepository.saveAndFlush(seat);
 
         Booking booking = new Booking();
+        booking.setUser(user);
         booking.setTrain(testTrain);
         booking.setTravelDateTime(LocalDate.now().plusDays(1));
         booking.setBookingStatus(BookingStatus.PENDING_PAYMENT);
@@ -126,7 +140,7 @@ public class PaymentDuplicateCallbackL1Test {
         reservation = seatReservationRepository.saveAndFlush(reservation);
 
         String idempotencyKey = "Success-Duplicate-payment-"+UUID.randomUUID();
-        PaymentResponse response = paymentService.initiatePayment(
+        PaymentResponse response = paymentService.initiatePayment(user.getId(),
                 booking.getId(), new PaymentRequest(idempotencyKey));
 
 
@@ -158,10 +172,10 @@ public class PaymentDuplicateCallbackL1Test {
         assertNull(savedReservation.getExpiresAt());
 
         try{
-            paymentService.initiatePayment(
+            paymentService.initiatePayment(user.getId(),
                     booking.getId(), new PaymentRequest(idempotencyKey));
         } catch (Exception e) {
-            assertEquals("payment with same Idempotent key already processed", e.getMessage());
+            assertEquals("payment with same idempotency key already processed", e.getMessage().toLowerCase());
         }
 
         entityManager.clear(); // Clear the persistence context to ensure fresh data is fetched from the database
